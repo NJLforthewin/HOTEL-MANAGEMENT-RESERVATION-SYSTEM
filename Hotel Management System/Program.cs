@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Hotel_Management_System.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 
+// Add session support
+builder.Services.AddSession();
+builder.Services.AddSingleton<ITempDataProvider, SessionStateTempDataProvider>();
+
 builder.Services.AddLogging(loggingBuilder =>
 {
     loggingBuilder.ClearProviders();
@@ -38,7 +43,8 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthentication();  
+app.UseSession(); // Enable session middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

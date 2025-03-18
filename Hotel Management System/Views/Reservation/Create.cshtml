@@ -1,0 +1,67 @@
+﻿@model Hotel_Management_System.Models.Booking
+
+@{
+    ViewData["Title"] = "Make a Booking";
+}
+
+<h2>Make a Booking</h2>
+
+<!-- Home Button -->
+<a href="@Url.Action("Index", "Home")" class="btn btn-secondary mb-3">
+    <i class="fas fa-home"></i> Home
+</a>
+
+<!-- Hidden data for JavaScript to access room prices dynamically -->
+<script type="application/json" id="RoomPricesData">
+    @Html.Raw(Json.Serialize(ViewBag.RoomPrices))
+</script>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label for="RoomId">Select Room</label>
+        <select asp-for="RoomId" class="form-control" required>
+            <option value="">-- Select a Room --</option>
+            @foreach (var room in ViewBag.Rooms)
+            {
+                <option value="@room.RoomId">
+                    @room.Category - Room @room.RoomNumber ($@room.PricePerNight/night)
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="GuestName">Guest Name</label>
+        <input asp-for="GuestName" class="form-control" placeholder="Enter your name" required />
+    </div>
+
+    <div class="form-group">
+        <label for="Email">Email</label>
+        <input asp-for="Email" class="form-control" placeholder="Enter your email" required />
+    </div>
+
+    <div class="form-group">
+        <label for="PhoneNumber">Phone Number</label>
+        <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number" required />
+    </div>
+
+    <div class="form-group">
+        <label for="CheckInDate">Check-in Date</label>
+        <input asp-for="CheckInDate" type="date" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="CheckOutDate">Check-out Date</label>
+        <input asp-for="CheckOutDate" type="date" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="TotalPrice">Total Price</label>
+        <input id="TotalPrice" class="form-control" readonly />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Book Now</button>
+</form>
+
+<!-- Link external JavaScript -->
+<script src="~/js/site.js"></script>

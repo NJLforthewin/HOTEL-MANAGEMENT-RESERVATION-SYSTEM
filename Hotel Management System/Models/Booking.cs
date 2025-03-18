@@ -24,7 +24,7 @@ namespace Hotel_Management_System.Models
         public int RoomId { get; set; }
 
         [ForeignKey("RoomId")]
-        public Room? Room { get; set; } 
+        public Room? Room { get; set; }
 
         [Required(ErrorMessage = "Check-in date is required.")]
         [DataType(DataType.Date)]
@@ -38,11 +38,13 @@ namespace Hotel_Management_System.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
 
+        [Required]
         public string Status { get; set; } = "Pending";
 
+        [Required]
+        public string? BookingType { get; set; }
 
-        public DateTime? CheckedInAt { get; set; } 
+        public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }
-
     }
 }
