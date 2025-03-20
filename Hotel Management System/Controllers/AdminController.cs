@@ -116,6 +116,20 @@ namespace Hotel_Management_System.Controllers
             return RedirectToAction("UserList");
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public IActionResult MakeAllRoomsAvailable()
+        {
+            var rooms = _context.Rooms.ToList();
+            foreach (var room in rooms)
+            {
+                room.Status = "Available";
+            }
+
+            _context.SaveChanges();
+            TempData["SuccessMessage"] = "All rooms have been set to Available.";
+            return RedirectToAction("Rooms", "Room");
+        }
 
 
     }

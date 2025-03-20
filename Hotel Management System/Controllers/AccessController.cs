@@ -60,7 +60,8 @@ namespace Hotel_Management_System.Controllers
                         var authProperties = new AuthenticationProperties
                         {
                             AllowRefresh = true,
-                            IsPersistent = modelLogin.RememberMe
+                            IsPersistent = modelLogin.RememberMe, // Remember Me functionality
+                            ExpiresUtc = modelLogin.RememberMe ? DateTime.UtcNow.AddDays(7) : (DateTime?)null
                         };
 
                         await HttpContext.SignInAsync(
@@ -73,7 +74,7 @@ namespace Hotel_Management_System.Controllers
                             "Admin" => RedirectToAction("Dashboard", "Admin"),
                             "FrontDesk" => RedirectToAction("Dashboard", "FrontDesk"),
                             "Housekeeping" => RedirectToAction("Dashboard", "Housekeeping"),
-                            _ => RedirectToAction("Index", "Home")
+                            _ => RedirectToAction("Login", "Access")
                         };
                     }
                     else

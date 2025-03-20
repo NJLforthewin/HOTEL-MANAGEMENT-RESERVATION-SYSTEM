@@ -40,11 +40,15 @@ namespace Hotel_Management_System.Models
 
         [Required]
         public string Status { get; set; } = "Pending";
-
-        [Required]
-        public string? BookingType { get; set; }
+        public string BookingType { get; set; } = string.Empty;
 
         public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        // New fields for payment processing
+        public string? PaymentMethod { get; set; } // e.g., Credit Card, Online Wallet
+        public string? PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed
+        public string? TransactionId { get; set; } // Reference ID for payment gateway
     }
 }

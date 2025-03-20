@@ -1,10 +1,13 @@
-﻿@model Hotel_Management_System.Models.Booking
+﻿@{
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+@model Hotel_Management_System.Models.Booking
 
 @{
-    ViewData["Title"] = "Create Booking";
+    ViewData["Title"] = "Walk-In";
 }
 
-<h2>Create Booking</h2>
+<h2>Walk-In</h2>
 
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
@@ -51,8 +54,7 @@
     <div class="form-group">
         <label asp-for="BookingType" class="control-label">Booking Type</label>
         <select asp-for="BookingType" class="form-control">
-            <option value="Booking">Booking</option>
-            <option value="Reservation">Reservation</option>
+            <option value="Walk-In">Walk-In</option>
         </select>
         <span asp-validation-for="BookingType" class="text-danger"></span>
     </div>
@@ -73,6 +75,7 @@
             <option value="">-- Select a Payment Method --</option>
             <option value="Credit/Debit Card">Credit/Debit Card</option>
             <option value="Online Wallet">Online Wallet</option>
+                <option value="Cash">Cash</option>
             <option value="Bank Transfer">Bank Transfer</option>
         </select>
         <span asp-validation-for="PaymentMethod" class="text-danger"></span>

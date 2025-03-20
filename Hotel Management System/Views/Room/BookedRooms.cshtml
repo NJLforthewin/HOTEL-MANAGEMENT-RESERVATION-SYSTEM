@@ -1,0 +1,45 @@
+﻿@{
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+@model IEnumerable<Hotel_Management_System.Models.Booking>
+
+@{
+    ViewData["Title"] = "Booked Rooms";
+}
+
+<h2>Booked Rooms (Confirmed & Checked-In)</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Guest Name</th>
+            <th>Room Number</th>
+            <th>Check-In Date</th>
+            <th>Check-Out Date</th>
+            <th>Total Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.GuestName</td>
+                <td>@(booking.Room != null ? booking.Room.RoomNumber : "N/A")</td>
+                <td>@booking.CheckInDate.ToShortDateString()</td>
+                <td>@booking.CheckOutDate.ToShortDateString()</td>
+                <td>@booking.TotalPrice.ToString("C")</td>
+                <td>@booking.Status</td>
+                <td>
+                    <form asp-action="ConfirmCheckOut" asp-controller="Booking" method="post" class="d-inline">
+                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                        <button type="submit" class="btn btn-warning btn-sm">Check-Out</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

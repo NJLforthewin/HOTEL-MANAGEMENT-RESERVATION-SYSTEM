@@ -33,3 +33,15 @@
     checkInInput.addEventListener("change", calculateTotalPrice);
     checkOutInput.addEventListener("change", calculateTotalPrice);
 });
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", function (event) {
+            const bookingType = document.querySelector("input[name='BookingType']").value;
+            console.log("Booking Type Sent:", bookingType);
+        });
+    }
+});

@@ -1,0 +1,28 @@
+﻿@{
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+@model IEnumerable<Hotel_Management_System.Models.Room> 
+<h2>All Rooms</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Room Number</th>
+            <th>Category</th>
+            <th>Price Per Night</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var room in Model)
+        {
+            <tr>
+                <td>@room.RoomNumber</td>
+                <td>@room.Category</td>
+                <td>@room.PricePerNight.ToString("C")</td>
+                <td>@room.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>

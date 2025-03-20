@@ -1,44 +1,156 @@
-﻿@model IEnumerable<Hotel_Management_System.Models.Booking>
-
-@{
-    ViewData["Title"] = "Pending Bookings";
+﻿@{
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
 }
 
-<h2>Pending Bookings</h2>
+@model IEnumerable<Hotel_Management_System.Models.Booking>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Guest Name</th>
-            <th>Room Number</th>
-            <th>Check-In</th>
-            <th>Check-Out</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var booking in Model)
-        {
-            <tr>
-                <td>@booking.GuestName</td>
-                <td>@(booking.Room != null ? booking.Room.RoomNumber : "N/A")</td>
-                <td>@booking.CheckInDate.ToShortDateString()</td>
-                <td>@booking.CheckOutDate.ToShortDateString()</td>
-                <td>@booking.TotalPrice.ToString("C")</td>
-                <td>@booking.Status</td>
-                <td>
-                    <form asp-action="ConfirmBooking" asp-controller="Booking" method="post">
-                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                        <button type="submit" class="btn btn-success">Confirm</button>
-                    </form>
-                    <form asp-action="CancelBooking" asp-controller="Booking" method="post" class="mt-1">
-                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                        <button type="submit" class="btn btn-danger">Cancel</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@{
+    ViewData["Title"] = "Front Desk Dashboard";
+}
+<style>
+    .dashboard-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .dashboard-section {
+        width: 100%; /* Make sure both tables take full width */
+    }
+
+    table {
+        width: 100%; /* Ensures the table extends fully */
+        table-layout: auto; /* Allows columns to adjust naturally */
+        border-collapse: collapse;
+        border: 1px solid black;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+        white-space: nowrap; /* Prevents text wrapping */
+    }
+
+    th {
+        text-align: center;
+    }
+
+    td.actions {
+        border: none;
+        text-align: center;
+    }
+
+    .actions {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+
+</style>
+
+
+<div class="dashboard-container">
+    <!-- Confirmed Bookings Section -->
+    <div class="dashboard-section">
+        <h3>Confirmed Bookings</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Guest Name</th>
+                    <th>Room</th>
+                    <th>Check-In</th>
+                    <th>Check-Out</th>
+                    <th>Booking Type</th>
+                    <th>Payment Method</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ViewBag.ConfirmedBookings != null && ViewBag.ConfirmedBookings.Count > 0)
+                {
+                    @foreach (var booking in ViewBag.ConfirmedBookings)
+                    {
+                        <tr>
+                            <td>@booking.GuestName</td>
+                            <td>@(booking.Room?.RoomNumber ?? "N/A")</td>
+                            <td>@booking.CheckInDate.ToShortDateString()</td>
+                            <td>@booking.CheckOutDate.ToShortDateString()</td>
+                            <td>@(booking.BookingType ?? "Unknown")</td>
+                            <td>@(booking.PaymentMethod ?? "Not Specified")</td>
+                            <td class="actions">
+                                <form asp-action="ConfirmCheckIn" asp-controller="Booking" method="post">
+                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                    <button type="submit" class="btn btn-primary btn-sm">Check-In</button>
+                                </form>
+
+                                <form asp-action="Cancel" asp-controller="FrontDesk" method="post">
+                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" class="text-center">No confirmed bookings found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pending Bookings Section -->
+    <div class="dashboard-section">
+        <h3>Pending Bookings</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Guest Name</th>
+                    <th>Room</th>
+                    <th>Check-In</th>
+                    <th>Check-Out</th>
+                    <th>Booking Type</th>
+                    <th>Payment Method</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ViewBag.PendingBookings != null && ViewBag.PendingBookings.Count > 0)
+                {
+                    @foreach (var booking in ViewBag.PendingBookings)
+                    {
+                        <tr>
+                            <td>@booking.GuestName</td>
+                            <td>@(booking.Room?.RoomNumber ?? "N/A")</td>
+                            <td>@booking.CheckInDate.ToShortDateString()</td>
+                            <td>@booking.CheckOutDate.ToShortDateString()</td>
+                            <td>@(booking.BookingType ?? "Unknown")</td>
+                            <td>@(booking.PaymentMethod ?? "Not Specified")</td>
+                            <td class="actions">
+                                <form asp-action="Confirm" asp-controller="FrontDesk" method="post">
+                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                    <button type="submit" class="btn btn-success btn-sm">Confirm</button>
+                                </form>
+
+                                <form asp-action="Cancel" asp-controller="FrontDesk" method="post">
+                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center">No pending bookings found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

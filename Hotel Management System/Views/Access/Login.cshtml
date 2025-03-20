@@ -18,7 +18,7 @@
         <!-- Hotel Branding -->
         <div class="hotel-branding">
             <img src="/images/hotel-logo.png" alt="Hotel Logo" class="hotel-logo">
-            <div class="hotel-name">Nuxus Hotel</div> 
+            <div class="hotel-name">Nuxus Hotel</div>
         </div>
 
         <!-- Login Form -->
@@ -32,6 +32,13 @@
                 <label for="password">Password:</label>
                 @Html.PasswordFor(m => m.Password, new { @class = "form-control", @placeholder = "Enter your password", @required = true })
             </div>
+
+            <!-- Remember Me Checkbox -->
+            <div class="form-group form-check">
+                @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                <label class="form-check-label" for="RememberMe">Remember Me</label>
+            </div>
+
             <div class="form-group">
                 <input type="submit" name="submit" class="btn btn-info" value="Login">
             </div>
