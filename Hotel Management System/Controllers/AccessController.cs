@@ -23,20 +23,19 @@ namespace Hotel_Management_System.Controllers
             _logger = logger;
         }
 
-        // GET: Access/Login
         [AllowAnonymous]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = "")
         {
             if (HttpContext.User.Identity != null && HttpContext.User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Home");
 
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
-        // POST: Access/Login
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Login(VMLogin modelLogin)
+        public async Task<IActionResult> Login(VMLogin modelLogin, string? returnUrl = "")
         {
             if (ModelState.IsValid)
             {
@@ -50,18 +49,17 @@ namespace Hotel_Management_System.Controllers
                     if (isPasswordValid)
                     {
                         var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.NameIdentifier, user.Email),
-                            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-                            new Claim(ClaimTypes.Role, user.Role)
-                        };
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Email),
+                    new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                    new Claim(ClaimTypes.Role, user.Role)
+                };
 
                         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                         var authProperties = new AuthenticationProperties
                         {
                             AllowRefresh = true,
-                            IsPersistent = modelLogin.RememberMe, // Remember Me functionality
-                            ExpiresUtc = modelLogin.RememberMe ? DateTime.UtcNow.AddDays(7) : (DateTime?)null
+                            IsPersistent = modelLogin.RememberMe
                         };
 
                         await HttpContext.SignInAsync(
@@ -69,12 +67,19 @@ namespace Hotel_Management_System.Controllers
                             new ClaimsPrincipal(claimsIdentity),
                             authProperties);
 
+                        // If returnUrl is provided and it's a local URL, redirect to it
+                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl);
+                        }
+
+                        // Otherwise, redirect based on role
                         return user.Role switch
                         {
                             "Admin" => RedirectToAction("Dashboard", "Admin"),
                             "FrontDesk" => RedirectToAction("Dashboard", "FrontDesk"),
                             "Housekeeping" => RedirectToAction("Dashboard", "Housekeeping"),
-                            _ => RedirectToAction("Login", "Access")
+                            _ => RedirectToAction("Index", "Home")
                         };
                     }
                     else

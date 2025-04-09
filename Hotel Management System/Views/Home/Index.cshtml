@@ -1,71 +1,314 @@
 ﻿@{
-    ViewData["Title"] = "Nuxus Hotel - Dashboard";
+    ViewData["Title"] = "Nuxus Hotel - Welcome";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/site.css">
-</head>
-<body class="index-body">
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <a class="navbar-brand" href="#">Nuxus Hotel</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="@Url.Action("Index", "Home")">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="@Url.Action("Create", "Booking")">Reservation</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="Privacy">Privacy</a>
-                </li>
-            </ul>
+@using System.Linq
+@model List<Hotel_Management_System.Models.Room>
+
+<!-- Hero Section with Full-Width Image -->
+<div class="hero-section">
+    <img src="~/images/luxury-hotel.jpeg" alt="Nuxus Hotel Luxury" />
+    <div class="hero-overlay">
+        <div class="hero-content">
+            <h1>Experience Luxury <span class="highlight">Redefined</span></h1>
+            <p>Indulge in the finest accommodations and services at Nuxus Hotel</p>
+            <a href="#reservation" class="btn book-now-btn">Book Now</a>
         </div>
-    </nav>
+    </div>
+    <div class="hero-navigation">
+        <div class="hero-nav-btn prev-btn">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+        <div class="hero-nav-btn next-btn">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    </div>
+</div>
 
+<!-- Reservation Section -->
+<section id="reservation" class="reservation-section">
     <div class="container">
-        <h1 class="text-center my-4">Welcome to Nuxus Hotel</h1>
-        <p class="text-center">Dear Guest, please explore our rooms and book your stay.</p>
+        <h2 class="text-center section-heading">Reserve Your Stay</h2>
 
-        <div class="room-section">
-            <h2>Available Rooms</h2>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="reservation-form">
+                    <form id="bookingForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="checkin">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkin" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="checkout">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkout" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="roomType">Room Type</label>
+                                <select class="form-control" id="roomType" required>
+                                    <option value="">Select Room Type</option>
+                                    <option value="Standard">Standard Room (2 Guests)</option>
+                                    <option value="Deluxe">Deluxe Room (3 Guests)</option>
+                                    <option value="Suite">Suite Room (4 Guests)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <button type="submit" class="btn btn-reserve">Check Availability</button>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Index", "Home", new { scrollTo = "reservation" }) })" class="btn btn-reserve">Login to Reserve</a>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <!-- About Section -->
+    <section class="experience-section">
+        <h2 class="section-heading">About Nuxus Hotel</h2>
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <p class="text-center mb-5">Nuxus Hotel offers an unparalleled blend of luxury, comfort, and convenience. Located in a prime location, our hotel provides easy access to major attractions while offering a peaceful retreat from the bustling city life.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <h4 class="feature-title">Free High-Speed WiFi</h4>
+                    <p class="feature-description">Stay connected with complimentary high-speed internet throughout the hotel.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-parking"></i>
+                    </div>
+                    <h4 class="feature-title">Complimentary Parking</h4>
+                    <p class="feature-description">Enjoy free parking for all guests during your stay at our hotel.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h4 class="feature-title">Fine Dining</h4>
+                    <p class="feature-description">Experience exquisite cuisine at our in-house restaurant and 24/7 room service.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-swimming-pool"></i>
+                    </div>
+                    <h4 class="feature-title">Luxury Pool</h4>
+                    <p class="feature-description">Relax and unwind in our spectacular swimming pool with city views.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rooms Section -->
+    <section id="rooms" class="room-section">
+        <h2 class="text-center section-heading">Our Luxury Accommodations</h2>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="no-rooms-message">
+                <p>@ViewBag.NoRoomsMessage</p>
+            </div>
+        }
+        else
+        {
             <div class="row">
                 @foreach (var room in Model)
                 {
-                    <div class="col-md-4">
-                        <div class="card mb-4">
-                            <img src="~/images/@(room.Category.ToLower()).jpg" class="card-img-top" alt="@room.Category Room">
+                    <div class="col-md-4 mb-4">
+                        <div class="card room-card">
+                            <div class="card-img-container">
+                                <img src="~/images/@(room.Category?.ToLower()).jpg" class="card-img-top" alt="@room.Category Room">
+                            </div>
                             <div class="card-body">
-                                <h5 class="card-title">@room.Category Room (@room.RoomNumber)</h5>
-                                <p class="card-text">Price: $@room.PricePerNight per night</p>
-                                <p class="card-text">Status: @room.Status</p>
-                                @if (room.Status == "Available")
-                                {
-                                    <a href="@Url.Action("Create", "Booking", new { roomId = room.RoomId })" class="btn btn-primary">Book Now</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-secondary" disabled>Not Available</button>
-                                }
+                                <h5 class="card-title">@room.Category Room</h5>
+                                <p class="card-text room-number">Room @room.RoomNumber</p>
+                                <p class="card-text price">$@room.PricePerNight <span>per night</span></p>
+
+                                <!-- Add this capacity information -->
+                                <p class="card-text capacity">
+                                    <i class="fas fa-user"></i>
+                                    @(room.Capacity == 1 ? "1 Guest" : $"{room.Capacity} Guests")
+                                </p>
+
+                                <div class="d-flex justify-content-between">
+                                    <a href="@Url.Action("Details", "Room", new { id = room.RoomId })" class="btn btn-view-details">View Details</a>
+
+                                    @if (room.Status == "Available")
+                                    {
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            <a href="@Url.Action("Create", "Booking", new { roomId = room.RoomId })" class="btn btn-book-now">Book Now</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Create", "Booking", new { roomId = room.RoomId }) })" class="btn btn-book-now">Login to Book</a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary" disabled>Not Available</button>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
                 }
             </div>
-        </div>
-    </div>
+        }
+    </section>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</body>
-</html>
+    <!-- Testimonials Section -->
+    <section class="testimonial-section">
+        <h2 class="text-center section-heading">Guest Experiences</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"Exceptional service and breathtaking rooms. The staff anticipated our every need and made our anniversary truly special."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Jonathan & Emily Wilson</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"Perfect location with easy access to all attractions. The rooms are impeccably designed and the amenities are world-class."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Maria Johnson</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"As a frequent business traveler, I've stayed in many hotels, but Nuxus stands out for its attention to detail and exceptional service."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Robert Davis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <h2 class="text-center section-heading">Contact Us</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Address</h4>
+                            <p>123 Luxury Avenue, City Center</p>
+                            <p>New York, NY 10001</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Phone</h4>
+                            <p>Reservations: +1 (800) 123-4567</p>
+                            <p>Front Desk: +1 (212) 555-6789</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <p>reservations@nuxushotel.com</p>
+                            <p>info@nuxushotel.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="map-container">
+                    <!-- Replace with actual map iframe or use a placeholder -->
+                    <div style="width:100%; height:400px; background-color:#f3f3f3; display:flex; align-items:center; justify-content:center;">
+                        <p>Interactive Map Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // Simple date validation for booking form
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('checkin').min = today;
+
+            document.getElementById('checkin').addEventListener('change', function() {
+                // Set checkout min date to be at least the check-in date
+                document.getElementById('checkout').min = this.value;
+
+                // If checkout date is before new check-in date, update it
+                if (document.getElementById('checkout').value < this.value) {
+                    let nextDay = new Date(this.value);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    document.getElementById('checkout').value = nextDay.toISOString().split('T')[0];
+                }
+            });
+
+            // Add scrolling functionality for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Check if we need to scroll to reservation section based on URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('scrollTo') === 'reservation') {
+                document.getElementById('reservation').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    </script>
+}

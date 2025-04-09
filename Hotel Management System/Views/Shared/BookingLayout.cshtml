@@ -3,43 +3,119 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin Panel</title>
+    <title>@ViewData["Title"] - Nuxus Hotel Front Desk</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/bookinglayout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/frontdesk.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="FrontDesk" asp-action="Dashboard">Pending Bookings</a>
-                <div class="navbar-collapse">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="WalkInBooking">Walk In</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="AvailableRooms">Available Rooms</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="BookedRooms">Booked Rooms</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="ReservedRooms">Reserved Rooms</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="Rooms">All Rooms</a></li>
-
-                    </ul>
-                    <a class="nav-link text-white" asp-controller="Home" asp-action="Logout">Logout</a>
+<body class="booking-body">
+    <!-- Sidebar -->
+    <aside class="frontdesk-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                Nuxus Hotel
+            </div>
+        </div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")"
+                           href="@Url.Action("Dashboard", "FrontDesk")">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "WalkIn" ? "active" : "")"
+                           href="@Url.Action("WalkIn", "FrontDesk")">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Walk In</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "AvailableRooms" ? "active" : "")"
+                           href="@Url.Action("AvailableRooms", "FrontDesk")">
+                            <i class="fas fa-door-open"></i>
+                            <span>Available Rooms</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "BookedRooms" ? "active" : "")"
+                           href="@Url.Action("BookedRooms", "FrontDesk")">
+                            <i class="fas fa-bed"></i>
+                            <span>Booked Rooms</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "ReservedRooms" ? "active" : "")"
+                           href="@Url.Action("ReservedRooms", "FrontDesk")">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Reserved Rooms</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "AllRooms" ? "active" : "")"
+                           href="@Url.Action("AllRooms", "FrontDesk")">
+                            <i class="fas fa-th-list"></i>
+                            <span>All Rooms</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="support-info">
+                    <i class="fas fa-headset"></i>
+                    <span>Front Desk Support</span>
+                    <div class="support-phone">+1 (555) 123-4567</div>
                 </div>
             </div>
-        </nav>
+        </div>
+    </aside>
+
+    <!-- Top Header -->
+    <header class="frontdesk-header">
+        <div class="header-container">
+            <div class="header-title">
+                <h2>Front Desk Dashboard</h2>
+            </div>
+            <div class="header-actions">
+                @if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
+                {
+                    <div class="dropdown">
+                        <a class="user-name" href="#" role="button" data-bs-toggle="dropdown">
+                            @User.Identity.Name <i class="fas fa-chevron-down ms-1"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="@Url.Action("Profile", "Account")"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Logout", "Home")"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="content-container">
             @RenderBody()
-        </main>
+        </div>
     </div>
 
-    <footer class="border-top footer text-white text-center">
-        <div class="container">
-            Copyright &copy; HotelManagement @DateTime.Now.Year
+    <footer class="frontdesk-footer">
+        <div class="footer-content">
+            <p>© @DateTime.Now.Year - Nuxus Hotel Management System</p>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/bookinglayout.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

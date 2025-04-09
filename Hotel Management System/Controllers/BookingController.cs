@@ -5,61 +5,107 @@ using Hotel_Management_System.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace Hotel_Management_System.Controllers
 {
     public class BookingController : Controller
     {
         private readonly HotelManagementDbContext _context;
-
         public BookingController(HotelManagementDbContext context)
         {
             _context = context;
         }
 
+        // GET method for Create
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult Create(int? roomId = null)
         {
-            var rooms = _context.Rooms.ToList();
+            
+            // For authenticated users, show available rooms
+            var rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
             ViewBag.Rooms = rooms;
             ViewBag.RoomPrices = rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
+
+            if (roomId.HasValue)
+            {
+                ViewBag.SelectedRoomId = roomId.Value;
+            }
+            else if (TempData["SelectedRoomId"] != null)
+            {
+                if (TempData["SelectedRoomId"] is int selectedRoomId)
+                {
+                    ViewBag.SelectedRoomId = selectedRoomId;
+                }
+                TempData.Keep("SelectedRoomId");
+            }
+
             return View();
         }
 
+        // POST method for Create
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Booking booking)
         {
+            // Debug info to find validation errors
+            var errors = ModelState.Values.SelectMany(v => v.Errors);
+            foreach (var error in errors)
+            {
+                System.Diagnostics.Debug.WriteLine($"Model Error: {error.ErrorMessage}");
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Rooms = _context.Rooms.ToList();
+                ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
                 ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
                 return View(booking);
             }
 
-            ProcessBooking(booking);
-
-            // ✅ Redirect based on BookingType
-            if (booking.BookingType == "Walk-In")
+            try
             {
-                return RedirectToAction("BookedRooms", "Room"); // ✅ Redirect for Walk-In bookings
+                // Force UserId to null
+                booking.UserId = null;
+
+                ProcessBooking(booking);
+
+                // Redirect based on BookingType
+                if (booking.BookingType == "Walk-In")
+                {
+                    return RedirectToAction("BookedRooms", "Room"); // Redirect for Walk-In bookings
+                }
+                return RedirectToAction("Index", "Home"); // Normal booking goes to Home
             }
-
-            return RedirectToAction("Index", "Home"); // ✅ Normal booking goes to Home
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error processing booking: " + ex.Message);
+                ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
+                ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
+                return View(booking);
+            }
         }
-
-
         private void ProcessBooking(Booking booking)
         {
             var room = _context.Rooms.FirstOrDefault(r => r.RoomId == booking.RoomId);
-            if (room == null || booking.CheckInDate >= booking.CheckOutDate)
+            if (room == null)
             {
-                ModelState.AddModelError("", "Invalid booking details.");
-                return;
+                ModelState.AddModelError("", "Selected room not found.");
+                throw new Exception("Selected room not found.");
             }
 
+            if (booking.CheckInDate >= booking.CheckOutDate)
+            {
+                ModelState.AddModelError("", "Check-out date must be after check-in date.");
+                throw new Exception("Check-out date must be after check-in date.");
+            }
+
+            // IMPORTANT: Set UserId to null directly to avoid any lookup
+            booking.UserId = null;
+
+            // Ensure we have values for required fields
             booking.GuestName ??= "Guest";
             booking.Email ??= "No Email";
             booking.PhoneNumber ??= "No Phone";
@@ -67,16 +113,16 @@ namespace Hotel_Management_System.Controllers
             booking.PaymentStatus = "Unpaid";
             booking.PaymentMethod ??= "Not Specified";
             booking.CheckedOutAt = null;
+            booking.CreatedAt = DateTime.Now;
 
-            // ✅ Handle Walk-In Booking separately
+            // Handle Walk-In Booking separately
             if (booking.BookingType == "Walk-In")
             {
-                booking.Status = "Checked-In";   // 🔥 Directly check-in
+                booking.Status = "Checked-In";   // Directly check-in
                 booking.CheckedInAt = DateTime.Now;
-
                 if (room != null)
                 {
-                    room.Status = "Occupied";  // 🔥 Mark room as occupied
+                    room.Status = "Occupied";  // Mark room as occupied
                 }
             }
             else
@@ -93,7 +139,6 @@ namespace Hotel_Management_System.Controllers
                 : "Booking submitted successfully!";
         }
 
-
         [Authorize(Roles = "Admin, FrontDesk")]
         public IActionResult DashboardBooking()
         {
@@ -104,14 +149,36 @@ namespace Hotel_Management_System.Controllers
         [HttpGet]
         public IActionResult WalkInBooking()
         {
-            var rooms = _context.Rooms.Where(r => r.Status == "Available").ToList(); // ✅ Only show available rooms
+            var rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
             ViewBag.Rooms = rooms;
             ViewBag.RoomPrices = rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
 
+            // Create booking without requiring a user
             var booking = new Booking
             {
-                BookingType = "Walk-In"  // ✅ Always Walk-In
+                BookingType = "Walk-In",
+                CreatedAt = DateTime.Now
             };
+
+            // Try to find a user, but don't require one
+            try
+            {
+                var email = User.FindFirstValue(ClaimTypes.Email);
+                if (!string.IsNullOrEmpty(email))
+                {
+                    var currentUser = _context.Users.FirstOrDefault(u => u.Email == email);
+                    if (currentUser != null)
+                    {
+                        booking.UserId = currentUser.UserId;
+                        booking.User = currentUser;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Just log the exception but continue
+                System.Diagnostics.Debug.WriteLine($"Error finding user: {ex.Message}");
+            }
 
             return View(booking);
         }
@@ -121,38 +188,90 @@ namespace Hotel_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult WalkInBooking(Booking booking)
         {
+            // Debug info to find validation errors
+            var errors = ModelState.Values.SelectMany(v => v.Errors);
+            foreach (var error in errors)
+            {
+                System.Diagnostics.Debug.WriteLine($"Model Error: {error.ErrorMessage}");
+            }
+
             if (!ModelState.IsValid)
             {
-
                 ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
                 ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
                 return View(booking);
             }
 
-            var room = _context.Rooms.FirstOrDefault(r => r.RoomId == booking.RoomId);
-            if (room == null || booking.CheckInDate >= booking.CheckOutDate)
+            try
             {
-                ModelState.AddModelError("", "Invalid booking details.");
+                var room = _context.Rooms.FirstOrDefault(r => r.RoomId == booking.RoomId);
+                if (room == null)
+                {
+                    ModelState.AddModelError("", "Selected room not found.");
+                    ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
+                    ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
+                    return View(booking);
+                }
+
+                if (booking.CheckInDate >= booking.CheckOutDate)
+                {
+                    ModelState.AddModelError("", "Check-out date must be after check-in date.");
+                    ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
+                    ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
+                    return View(booking);
+                }
+
+                // Try to find a user, but don't require one
+                try
+                {
+                    var email = User.FindFirstValue(ClaimTypes.Email);
+                    if (!string.IsNullOrEmpty(email))
+                    {
+                        var currentUser = _context.Users.FirstOrDefault(u => u.Email == email);
+                        if (currentUser != null)
+                        {
+                            booking.UserId = currentUser.UserId;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Just log the exception but continue
+                    System.Diagnostics.Debug.WriteLine($"Error finding user: {ex.Message}");
+                }
+
+                // Set default values if not provided
+                booking.GuestName ??= "Guest";
+                booking.Email ??= "No Email";
+                booking.PhoneNumber ??= "No Phone";
+                booking.TotalPrice = CalculateTotalPrice(room.PricePerNight, booking.CheckInDate, booking.CheckOutDate);
+                booking.PaymentMethod ??= "Not Specified";
+                booking.CreatedAt = DateTime.Now;
+
+                // Walk-In Booking is immediately confirmed
+                booking.BookingType = "Walk-In";
+                booking.Status = "Checked-In";
+                booking.PaymentStatus = "Paid";
+                booking.CheckedInAt = DateTime.Now;
+                booking.CheckedOutAt = null;
+
+                // Mark Room as Occupied
+                room.Status = "Occupied";
+
+                _context.Bookings.Add(booking);
+                _context.SaveChanges();
+
+                TempData["SuccessMessage"] = "Walk-In Booking successful! Guest is now checked in.";
+                return RedirectToAction("BookedRooms", "Room"); // Fixed action name
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error processing booking: " + ex.Message);
+                ViewBag.Rooms = _context.Rooms.Where(r => r.Status == "Available").ToList();
+                ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
                 return View(booking);
             }
-
-            // ✅ Walk-In Booking is immediately confirmed
-            booking.BookingType = "Walk-In";
-            booking.Status = "Checked-In";
-            booking.PaymentStatus = "Paid";
-            booking.CheckedInAt = DateTime.Now;
-            booking.CheckedOutAt = null;
-
-            // ✅ Mark Room as Occupied
-            room.Status = "Occupied";
-
-            _context.Bookings.Add(booking);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Walk-In Booking successful! Guest is now checked in.";
-            return RedirectToAction("BookedRooms", "Rooms");
         }
-
 
         [HttpPost]
         [Authorize(Roles = "Admin, FrontDesk")]
@@ -167,11 +286,11 @@ namespace Hotel_Management_System.Controllers
 
             if (booking.BookingType == "Reservation")
             {
-                booking.Status = "Reserved";  // ✅ Move to Reserved instead of directly to Booking
+                booking.Status = "Reserved";  // Move to Reserved instead of directly to Booking
             }
             else
             {
-                booking.Status = "Checked-In";  // ✅ Regular bookings follow normal flow
+                booking.Status = "Checked-In";  // Regular bookings follow normal flow
             }
             _context.SaveChanges();
             TempData["SuccessMessage"] = "Booking confirmed!";
@@ -211,61 +330,67 @@ namespace Hotel_Management_System.Controllers
             booking.CheckedInAt = DateTime.Now;
 
             if (booking.Room != null)
-                booking.Room.Status = "Occupied"; // Mark room as occupied
+            {
+                booking.Room.Status = "Occupied";
+            }
 
             _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Guest has been checked in successfully!";
-            return RedirectToAction(booking.BookingType == "Reservation" ? "ReservedRooms" : "BookedRooms", "Room");
+            TempData["SuccessMessage"] = "Check-in successful!";
+            return RedirectToAction("Dashboard", "FrontDesk");
         }
-
-
         [HttpPost]
         [Authorize(Roles = "Admin, FrontDesk")]
-        public IActionResult ConfirmCheckOut(int bookingId)
+        public IActionResult CheckOut(int bookingId)
         {
             var booking = _context.Bookings.Include(b => b.Room).FirstOrDefault(b => b.BookingId == bookingId);
-
-            if (booking == null || (booking.Status != "Checked-In" && booking.Status != "Reserved"))
+            if (booking == null || booking.Status != "Checked-In")
             {
-                TempData["ErrorMessage"] = "Invalid check-out request!";
-                return RedirectToAction("ReservedRooms", "Room"); // Redirect back to ReservedRooms page
+                TempData["ErrorMessage"] = "Invalid checkout request!";
+                return RedirectToAction("ActiveBookings", "Booking");
             }
+
+            booking.Status = "Checked-Out";
+            booking.CheckedOutAt = DateTime.Now;
 
             if (booking.Room != null)
-                booking.Room.Status = "Available"; // ✅ Mark room as available
-
-            _context.Bookings.Remove(booking); // ✅ Delete booking after checkout
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Guest has checked out successfully!";
-            return RedirectToAction(booking.BookingType == "Reservation" ? "ReservedRooms" : "BookedRooms", "Room");
-        }
-
-
-
-        [HttpPost]
-        [Authorize(Roles = "Admin, FrontDesk")]
-        public IActionResult CancelBooking(int bookingId)
-        {
-            var booking = _context.Bookings.FirstOrDefault(b => b.BookingId == bookingId);
-            if (booking == null)
             {
-                TempData["ErrorMessage"] = "Booking not found!";
-                return RedirectToAction("Dashboard", "FrontDesk");
+                booking.Room.Status = "Needs Cleaning"; // This is already correct
+                booking.Room.LastCleaned = booking.CheckedOutAt;
             }
 
-            booking.Status = "Canceled";
             _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Booking has been canceled.";
+            TempData["SuccessMessage"] = "Checkout successful!";
             return RedirectToAction("Dashboard", "FrontDesk");
         }
 
-        private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkInDate, DateTime checkOutDate)
+        [Authorize(Roles = "Admin, FrontDesk")]
+        public IActionResult ConfirmedBookings()
         {
-            int totalDays = (checkOutDate - checkInDate).Days;
-            return totalDays > 0 ? pricePerNight * totalDays : pricePerNight;
+            var confirmedBookings = _context.Bookings
+                .Include(b => b.Room)
+                .Where(b => b.Status == "Confirmed" && b.CheckedInAt == null)
+                .OrderBy(b => b.CheckInDate)
+                .ToList();
+
+            return View(confirmedBookings);
+        }
+
+        [Authorize(Roles = "Admin, FrontDesk")]
+        public IActionResult ActiveBookings()
+        {
+            var activeBookings = _context.Bookings
+                .Include(b => b.Room)
+                .Where(b => b.Status == "Checked-In" && b.CheckedOutAt == null)
+                .OrderBy(b => b.CheckOutDate)
+                .ToList();
+
+            return View(activeBookings);
+        }
+
+        private decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkIn, DateTime checkOut)
+        {
+            int nights = (int)(checkOut - checkIn).TotalDays;
+            return pricePerNight * nights;
         }
     }
 }

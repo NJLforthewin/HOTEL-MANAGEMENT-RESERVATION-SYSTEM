@@ -3,38 +3,153 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Housekeeping</title>
+    <title>@ViewData["Title"] - Nexus Hotel Housekeeping</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/housekeeping.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Housekeeping" asp-action="Dashboard">Housekeeping</a>
-                <div class="navbar-collapse">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Housekeeping" asp-action="Schedule">Cleaning Schedule</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Housekeeping" asp-action="Rooms">Room Assignments</a></li>
-                    </ul>
-                    <a class="nav-link text-white" asp-controller="Home" asp-action="Logout">Logout</a>
-                </div>
+    <div class="housekeeping-wrapper">
+        <!-- Sidebar -->
+        <nav class="housekeeping-sidebar">
+            <div class="housekeeping-sidebar-header">
+                <a href="#" class="housekeeping-sidebar-brand">
+                    <i class="fas fa-hotel me-2"></i>Nexus Hotel
+                </a>
+            </div>
+            <div class="housekeeping-sidebar-menu">
+                <a asp-controller="Housekeeping" asp-action="Index"
+                   class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a asp-controller="Housekeeping" asp-action="CleaningSchedule"
+                   class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "CleaningSchedule" ? "active" : "")">
+                    <i class="fas fa-calendar-alt"></i> Cleaning Schedule
+                </a>
+                <a asp-controller="Housekeeping" asp-action="RoomAssignments"
+                   class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "RoomAssignments" ? "active" : "")">
+                    <i class="fas fa-clipboard-list"></i> Room Assignments
+                    <span class="badge bg-warning rounded-pill ms-auto">3</span>
+                </a>
+                <a asp-controller="Housekeeping" asp-action="MaintenanceRequests"
+                   class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "MaintenanceRequests" ? "active" : "")">
+                    <i class="fas fa-tools"></i> Maintenance Requests
+                    <span class="badge bg-secondary rounded-pill ms-auto">2</span>
+                </a>
+                <a asp-controller="Housekeeping" asp-action="Inventory"
+                   class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Inventory" ? "active" : "")">
+                    <i class="fas fa-box-open"></i> Inventory
+                </a>
+                <a asp-controller="Access" asp-action="Logout" class="housekeeping-sidebar-menu-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+        <!-- Main Content -->
+        <div class="housekeeping-main-content">
+            <!-- Mobile Menu Toggle Button (Only visible on mobile) -->
+            <button id="sidebarToggle" class="btn btn-link d-md-none position-fixed" style="z-index: 1031; top: 10px; left: 10px;">
+                <i class="fas fa-bars fa-lg text-dark"></i>
+            </button>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
-        </main>
+
+            <footer class="text-center py-4 text-muted">
+                <div class="container">
+                    <span>&copy; 2025 Nexus Hotel - Housekeeping Portal</span>
+                </div>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-white text-center">
-        <div class="container">
-            Copyright &copy; HotelManagement @DateTime.Now.Year
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function() {
+            // Toggle sidebar on mobile
+            $('#sidebarToggle').on('click', function() {
+                $('.housekeeping-sidebar').toggleClass('active');
+                $('.housekeeping-main-content').toggleClass('active');
+            });
+
+            // Handle sidebar menu item activation
+            $('.housekeeping-sidebar-menu-item').click(function() {
+                // We don't need to manually set active as ASP.NET Core handles this
+                // Just for any dynamic items that might be added later
+            });
+
+            // Add filter functionality for room status table
+            $('.btn-group [data-filter]').on('click', function() {
+                var filter = $(this).data('filter');
+
+                // Update active state on buttons
+                $('.btn-group [data-filter]').removeClass('active');
+                $(this).addClass('active');
+
+                // Show all rows if "all" filter is selected
+                if (filter === 'all') {
+                    $('.room-row').show();
+                } else {
+                    // Otherwise, filter based on data-status
+                    $('.room-row').hide();
+                    $('.room-row[data-status="' + filter + '"]').show();
+                }
+            });
+
+            // Add maintenance modal functionality
+            $('.maintenance-btn').on('click', function() {
+                var roomId = $(this).data('room-id');
+                var roomNumber = $(this).data('room-number');
+
+                // Set the room details in the maintenance modal
+                $('#maintenanceRoomId').val(roomId);
+                $('#maintenanceRoomNumber').text(roomNumber);
+            });
+
+            // Card animation on hover
+            $('.row.mb-4 .card').hover(
+                function() { $(this).addClass('transform-active'); },
+                function() { $(this).removeClass('transform-active'); }
+            );
+
+            // Ensure proper scrolling in sidebar if needed
+            var activeMenuItem = $('.housekeeping-sidebar-menu-item.active');
+            if (activeMenuItem.length) {
+                var sidebarContainer = $('.housekeeping-sidebar');
+                var itemTop = activeMenuItem.position().top;
+                var containerHeight = sidebarContainer.height();
+
+                if (itemTop > containerHeight / 2) {
+                    sidebarContainer.scrollTop(itemTop - 100);
+                }
+            }
+
+            // Add table row hover effect
+            $('.room-row').hover(
+                function() { $(this).addClass('row-hover'); },
+                function() { $(this).removeClass('row-hover'); }
+            );
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

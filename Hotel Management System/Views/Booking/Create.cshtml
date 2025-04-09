@@ -6,51 +6,63 @@
 
 <h2>Create Booking</h2>
 
-<form asp-action="Create" method="post">
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create" asp-controller="Booking" method="post">
     @Html.AntiForgeryToken()
 
     <div class="form-group">
         <label asp-for="GuestName" class="control-label">Guest Name</label>
-        <input asp-for="GuestName" class="form-control" />
+        <input asp-for="GuestName" class="form-control" required />
         <span asp-validation-for="GuestName" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="Email" class="control-label">Email</label>
-        <input asp-for="Email" class="form-control" type="email" />
+        <input asp-for="Email" class="form-control" type="email" required />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="PhoneNumber" class="control-label">Phone Number</label>
-        <input asp-for="PhoneNumber" class="form-control" type="tel" />
+        <input asp-for="PhoneNumber" class="form-control" type="tel" required />
         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="RoomId" class="control-label">Room</label>
-        <select asp-for="RoomId" class="form-control" asp-items="@(new SelectList(ViewBag.Rooms, "RoomId", "RoomNumber"))">
+        <select asp-for="RoomId" class="form-control" required>
             <option value="">-- Select a Room --</option>
+            @foreach (var room in ViewBag.Rooms)
+            {
+                if (ViewBag.SelectedRoomId != null && ViewBag.SelectedRoomId == room.RoomId)
+                {
+                    <option value="@room.RoomId" data-price="@room.PricePerNight" selected>@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
+                }
+                else
+                {
+                    <option value="@room.RoomId" data-price="@room.PricePerNight">@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
+                }
+            }
         </select>
         <span asp-validation-for="RoomId" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="CheckInDate" class="control-label">Check-In Date</label>
-        <input asp-for="CheckInDate" class="form-control" type="date" />
+        <input asp-for="CheckInDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
         <span asp-validation-for="CheckInDate" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="CheckOutDate" class="control-label">Check-Out Date</label>
-        <input asp-for="CheckOutDate" class="form-control" type="date" />
+        <input asp-for="CheckOutDate" class="form-control" type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
         <span asp-validation-for="CheckOutDate" class="text-danger"></span>
     </div>
 
-    <!-- 🔥 Add Booking Type Selection -->
     <div class="form-group">
         <label asp-for="BookingType" class="control-label">Booking Type</label>
-        <select asp-for="BookingType" class="form-control">
+        <select asp-for="BookingType" class="form-control" required>
             <option value="Booking">Booking</option>
             <option value="Reservation">Reservation</option>
         </select>
@@ -69,7 +81,7 @@
 
     <div class="form-group">
         <label asp-for="PaymentMethod" class="control-label">Payment Method</label>
-        <select asp-for="PaymentMethod" class="form-control">
+        <select asp-for="PaymentMethod" class="form-control" required>
             <option value="">-- Select a Payment Method --</option>
             <option value="Credit/Debit Card">Credit/Debit Card</option>
             <option value="Online Wallet">Online Wallet</option>
@@ -78,8 +90,9 @@
         <span asp-validation-for="PaymentMethod" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
+    <div class="form-group mt-3">
         <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Cancel</a>
     </div>
 
 </form>
@@ -92,6 +105,78 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
-    <!-- Load external JavaScript -->
-    <script src="~/js/site.js"></script>
+    <script>
+        // Auto-update price when room selection changes
+        $(document).ready(function() {
+            // Initialize price display based on selected room
+            updatePrice();
+
+            // Update price when room selection changes
+            $("#RoomId").change(function() {
+                updatePrice();
+            });
+
+            // Update price when dates change
+            $("#CheckInDate, #CheckOutDate").change(function() {
+                updatePrice();
+            });
+
+            function updatePrice() {
+                var roomPrices = JSON.parse(document.getElementById('RoomPricesData').textContent);
+                var roomId = $("#RoomId").val();
+                var pricePerNight = roomPrices[roomId] || 0;
+
+                $("#PricePerNight").val("$" + pricePerNight.toFixed(2));
+
+                // Calculate total price based on dates
+                var checkIn = new Date($("#CheckInDate").val());
+                var checkOut = new Date($("#CheckOutDate").val());
+
+                if (checkIn && checkOut && checkIn < checkOut) {
+                    var days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                    var totalPrice = days * pricePerNight;
+                    $("#TotalPrice").val(totalPrice.toFixed(2));
+                } else {
+                    $("#TotalPrice").val("0.00");
+                }
+            }
+
+            // Form validation before submit
+            $("form").on("submit", function(e) {
+                var checkIn = new Date($("#CheckInDate").val());
+                var checkOut = new Date($("#CheckOutDate").val());
+
+                if (checkIn >= checkOut) {
+                    e.preventDefault();
+                    alert("Check-out date must be after check-in date");
+                    return false;
+                }
+
+                if (!$("#RoomId").val()) {
+                    e.preventDefault();
+                    alert("Please select a room");
+                    return false;
+                }
+
+                if (!$("#PaymentMethod").val()) {
+                    e.preventDefault();
+                    alert("Please select a payment method");
+                    return false;
+                }
+
+                // Make sure we have a numeric total price
+                var totalPrice = parseFloat($("#TotalPrice").val().replace(/[^0-9.-]+/g,""));
+                if (isNaN(totalPrice) || totalPrice <= 0) {
+                    e.preventDefault();
+                    alert("Invalid total price. Please check your dates and room selection.");
+                    return false;
+                }
+
+                // Set the TotalPrice to the numeric value without currency symbol
+                $("#TotalPrice").val(totalPrice.toFixed(2));
+
+                return true;
+            });
+        });
+    </script>
 }

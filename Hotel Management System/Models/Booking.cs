@@ -9,6 +9,9 @@ namespace Hotel_Management_System.Models
         [Key]
         public int BookingId { get; set; }
 
+        // Make UserId nullable
+        public int? UserId { get; set; }
+
         [Required(ErrorMessage = "Guest Name is required.")]
         public string GuestName { get; set; } = string.Empty;
 
@@ -45,6 +48,9 @@ namespace Hotel_Management_System.Models
         public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        // Change from 'required' to nullable
+        public User? User { get; set; }
 
         // New fields for payment processing
         public string? PaymentMethod { get; set; } // e.g., Credit Card, Online Wallet

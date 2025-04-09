@@ -6,32 +6,36 @@ using System.Linq;
 
 namespace Hotel_Management_System.Controllers
 {
-    [Authorize(Roles = "Admin,FrontDesk")]
+    // Move the Authorize attribute to individual actions instead of controller level
     public class RoomController : Controller
     {
         private readonly HotelManagementDbContext _context;
+        private readonly ILogger<RoomController> _logger;
 
-        public RoomController(HotelManagementDbContext context)
+        public RoomController(HotelManagementDbContext context, ILogger<RoomController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        [Authorize(Roles = "Admin,FrontDesk")]
         public IActionResult Rooms()
         {
-            var rooms = _context.Rooms.Include(r => r.Bookings).ToList(); // ✅ Ensure all related bookings are fetched
+            var rooms = _context.Rooms.Include(r => r.Bookings).ToList();
             return View(rooms);
         }
 
+        [Authorize(Roles = "Admin,FrontDesk")]
         public IActionResult AvailableRooms()
         {
             var availableRooms = _context.Rooms
-                .Include(r => r.Bookings) // ✅ Fetch related bookings
+                .Include(r => r.Bookings)
                 .Where(r => r.Status == "Available")
                 .ToList();
             return View(availableRooms);
         }
 
-        [Authorize(Roles = "Admin, FrontDesk")]
+        [Authorize(Roles = "Admin,FrontDesk")]
         public IActionResult BookedRooms()
         {
             var bookedRooms = _context.Bookings
@@ -42,8 +46,7 @@ namespace Hotel_Management_System.Controllers
             return View(bookedRooms);
         }
 
-
-        [Authorize(Roles = "Admin, FrontDesk")]
+        [Authorize(Roles = "Admin,FrontDesk")]
         public IActionResult ReservedRooms()
         {
             var reservedRooms = _context.Bookings
@@ -54,5 +57,21 @@ namespace Hotel_Management_System.Controllers
             return View(reservedRooms);
         }
 
+        // This action should be accessible to everyone
+        public IActionResult Details(int id)
+        {
+            _logger.LogInformation($"Fetching details for room ID: {id}");
+
+            var room = _context.Rooms.FirstOrDefault(r => r.RoomId == id);
+
+            if (room == null)
+            {
+                _logger.LogWarning($"Room with ID {id} not found");
+                return NotFound();
+            }
+
+            _logger.LogInformation($"Found room: {room.RoomId}, {room.Category}, {room.RoomNumber}");
+            return View(room);
+        }
     }
 }

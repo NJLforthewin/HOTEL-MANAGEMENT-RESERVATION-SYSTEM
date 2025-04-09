@@ -7,150 +7,315 @@
 @{
     ViewData["Title"] = "Front Desk Dashboard";
 }
-<style>
-    .dashboard-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 20px;
-        padding: 20px;
-    }
 
-    .dashboard-section {
-        width: 100%; /* Make sure both tables take full width */
-    }
+<div class="frontdesk-container">
+    <!-- Dashboard Statistics -->
+    <div class="frontdesk-stats">
+        <div class="stat-card arrivals">
+            <div class="stat-icon">
+                <i class="fas fa-sign-in-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Today's Arrivals</h3>
+                <div class="stat-value">@ViewBag.TodayArrivals</div>
+            </div>
+        </div>
 
-    table {
-        width: 100%; /* Ensures the table extends fully */
-        table-layout: auto; /* Allows columns to adjust naturally */
-        border-collapse: collapse;
-        border: 1px solid black;
-    }
+        <div class="stat-card departures">
+            <div class="stat-icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Today's Departures</h3>
+                <div class="stat-value">@ViewBag.TodayDepartures</div>
+            </div>
+        </div>
 
-    th, td {
-        border: 1px solid black;
-        padding: 8px;
-        text-align: left;
-        white-space: nowrap; /* Prevents text wrapping */
-    }
+        <div class="stat-card occupancy">
+            <div class="stat-icon">
+                <i class="fas fa-bed"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Current Occupancy</h3>
+                <div class="stat-value">@ViewBag.Occupancy<span>%</span></div>
+            </div>
+        </div>
 
-    th {
-        text-align: center;
-    }
-
-    td.actions {
-        border: none;
-        text-align: center;
-    }
-
-    .actions {
-        display: flex;
-        gap: 5px;
-        justify-content: center;
-    }
-
-
-</style>
-
-
-<div class="dashboard-container">
-    <!-- Confirmed Bookings Section -->
-    <div class="dashboard-section">
-        <h3>Confirmed Bookings</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Guest Name</th>
-                    <th>Room</th>
-                    <th>Check-In</th>
-                    <th>Check-Out</th>
-                    <th>Booking Type</th>
-                    <th>Payment Method</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (ViewBag.ConfirmedBookings != null && ViewBag.ConfirmedBookings.Count > 0)
-                {
-                    @foreach (var booking in ViewBag.ConfirmedBookings)
-                    {
-                        <tr>
-                            <td>@booking.GuestName</td>
-                            <td>@(booking.Room?.RoomNumber ?? "N/A")</td>
-                            <td>@booking.CheckInDate.ToShortDateString()</td>
-                            <td>@booking.CheckOutDate.ToShortDateString()</td>
-                            <td>@(booking.BookingType ?? "Unknown")</td>
-                            <td>@(booking.PaymentMethod ?? "Not Specified")</td>
-                            <td class="actions">
-                                <form asp-action="ConfirmCheckIn" asp-controller="Booking" method="post">
-                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                    <button type="submit" class="btn btn-primary btn-sm">Check-In</button>
-                                </form>
-
-                                <form asp-action="Cancel" asp-controller="FrontDesk" method="post">
-                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr><td colspan="7" class="text-center">No confirmed bookings found.</td></tr>
-                }
-            </tbody>
-        </table>
+        <div class="stat-card pending">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Pending Bookings</h3>
+                <div class="stat-value">@ViewBag.PendingCount</div>
+            </div>
+        </div>
     </div>
 
-    <!-- Pending Bookings Section -->
-    <div class="dashboard-section">
-        <h3>Pending Bookings</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Guest Name</th>
-                    <th>Room</th>
-                    <th>Check-In</th>
-                    <th>Check-Out</th>
-                    <th>Booking Type</th>
-                    <th>Payment Method</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (ViewBag.PendingBookings != null && ViewBag.PendingBookings.Count > 0)
-                {
-                    @foreach (var booking in ViewBag.PendingBookings)
-                    {
-                        <tr>
-                            <td>@booking.GuestName</td>
-                            <td>@(booking.Room?.RoomNumber ?? "N/A")</td>
-                            <td>@booking.CheckInDate.ToShortDateString()</td>
-                            <td>@booking.CheckOutDate.ToShortDateString()</td>
-                            <td>@(booking.BookingType ?? "Unknown")</td>
-                            <td>@(booking.PaymentMethod ?? "Not Specified")</td>
-                            <td class="actions">
-                                <form asp-action="Confirm" asp-controller="FrontDesk" method="post">
-                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                    <button type="submit" class="btn btn-success btn-sm">Confirm</button>
-                                </form>
+    <!-- Quick Actions -->
+    <div class="frontdesk-actions">
+        <a href="@Url.Action("WalkIn", "FrontDesk")" class="action-button">
+            <i class="fas fa-user-plus"></i>
+            <span>New Walk-In</span>
+        </a>
+        <a href="@Url.Action("AvailableRooms", "FrontDesk")" class="action-button">
+            <i class="fas fa-door-open"></i>
+            <span>Available Rooms</span>
+        </a>
+        <a href="#" class="action-button" id="checkoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Process Checkout</span>
+        </a>
+        <a href="#" class="action-button" id="searchBtn">
+            <i class="fas fa-search"></i>
+            <span>Search Guest</span>
+        </a>
+    </div>
 
-                                <form asp-action="Cancel" asp-controller="FrontDesk" method="post">
-                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
-                                </form>
-                            </td>
+    <!-- Booking Sections -->
+    <div class="frontdesk-sections">
+        <!-- Confirmed Bookings Section -->
+        <div class="booking-section">
+            <div class="section-header">
+                <h3><i class="fas fa-calendar-check"></i> Confirmed Bookings</h3>
+                <span class="badge">@(ViewBag.ConfirmedBookings?.Count ?? 0)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="frontdesk-table">
+                    <thead>
+                        <tr>
+                            <th>Guest Name</th>
+                            <th>Room</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Booking Type</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
                         </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7" class="text-center">No pending bookings found.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.ConfirmedBookings != null && ViewBag.ConfirmedBookings.Count > 0)
+                        {
+                            @foreach (var booking in ViewBag.ConfirmedBookings)
+                            {
+                                <tr>
+                                    <td class="guest-name">@booking.GuestName</td>
+                                    <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                    <td class="date">@booking.CheckInDate.ToShortDateString()</td>
+                                    <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
+                                    <td>
+                                        <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
+                                            @(booking.BookingType ?? "Unknown")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="payment-method">
+                                            @(booking.PaymentMethod ?? "Not Specified")
+                                        </span>
+                                    </td>
+                                    <td class="actions">
+                                        <form asp-action="ConfirmCheckIn" asp-controller="FrontDesk" method="post" class="action-form">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action checkin">
+                                                <i class="fas fa-check-circle"></i> Check-In
+                                            </button>
+                                        </form>
+
+                                        <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action cancel">
+                                                <i class="fas fa-times-circle"></i> Cancel
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr class="empty-row">
+                                <td colspan="7">
+                                    <div class="empty-message">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>No confirmed bookings found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pending Bookings Section -->
+        <div class="booking-section">
+            <div class="section-header">
+                <h3><i class="fas fa-clock"></i> Pending Bookings</h3>
+                <span class="badge">@(ViewBag.PendingBookings?.Count ?? 0)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="frontdesk-table">
+                    <thead>
+                        <tr>
+                            <th>Guest Name</th>
+                            <th>Room</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Booking Type</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.PendingBookings != null && ViewBag.PendingBookings.Count > 0)
+                        {
+                            @foreach (var booking in ViewBag.PendingBookings)
+                            {
+                                <tr>
+                                    <td class="guest-name">@booking.GuestName</td>
+                                    <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                    <td class="date">@booking.CheckInDate.ToShortDateString()</td>
+                                    <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
+                                    <td>
+                                        <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
+                                            @(booking.BookingType ?? "Unknown")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="payment-method">
+                                            @(booking.PaymentMethod ?? "Not Specified")
+                                        </span>
+                                    </td>
+                                    <td class="actions">
+                                        <form asp-action="Confirm" asp-controller="FrontDesk" method="post" class="action-form">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action confirm">
+                                                <i class="fas fa-check-circle"></i> Confirm
+                                            </button>
+                                        </form>
+
+                                        <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action cancel">
+                                                <i class="fas fa-times-circle"></i> Cancel
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr class="empty-row">
+                                <td colspan="7">
+                                    <div class="empty-message">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>No pending bookings found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Search Guest Modal -->
+<div class="modal fade" id="searchGuestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Search Guest</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="guestSearch" placeholder="Enter guest name, email or phone">
+                </div>
+                <div id="searchResults" class="mt-3">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Process Checkout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fas fa-key"></i></span>
+                    <input type="text" class="form-control" id="roomNumber" placeholder="Enter room number">
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-primary" type="button" id="processCheckoutBtn">
+                        <i class="fas fa-sign-out-alt me-2"></i>Process Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Show checkout modal
+            $("#checkoutBtn").click(function () {
+                $("#checkoutModal").modal('show');
+            });
+
+            // Show search modal
+            $("#searchBtn").click(function () {
+                $("#searchGuestModal").modal('show');
+            });
+
+            // Process checkout
+            $("#processCheckoutBtn").click(function () {
+                var roomNumber = $("#roomNumber").val().trim();
+                if (roomNumber) {
+                    $.ajax({
+                        url: '@Url.Action("ProcessCheckout", "FrontDesk")',
+                        type: 'POST',
+                        data: { roomNumber: roomNumber },
+                        success: function (result) {
+                            $("#checkoutModal").modal('hide');
+                            location.reload();
+                        },
+                        error: function () {
+                            alert("An error occurred during checkout. Please try again.");
+                        }
+                    });
+                } else {
+                    alert("Please enter a room number.");
+                }
+            });
+
+            // Guest search
+            $("#guestSearch").on("keyup", function () {
+                var query = $(this).val().trim();
+                if (query.length > 2) {
+                    $.ajax({
+                        url: '@Url.Action("SearchGuest", "FrontDesk")',
+                        type: 'GET',
+                        data: { query: query },
+                        success: function (data) {
+                            $("#searchResults").html(data);
+                        }
+                    });
+                } else {
+                    $("#searchResults").html("");
+                }
+            });
+        });
+    </script>
+}
