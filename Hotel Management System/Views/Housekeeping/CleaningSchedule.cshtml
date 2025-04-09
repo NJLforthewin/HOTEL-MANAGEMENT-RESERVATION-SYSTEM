@@ -45,23 +45,38 @@
                         {
                             @foreach (var room in Model)
                             {
-                                // Determine priority based on status
-                                string priority = room.Status == "Needs Cleaning" ? "High" : "Normal";
-                                string priorityClass = priority == "High" ? "text-danger fw-bold" : "text-secondary";
-
-                                // Create a deterministic but varied cleaning time estimate based on room number
-                                var baseTime = DateTime.Today.AddHours(8); // Start at 8 AM
-                                var cleaningTime = baseTime.AddMinutes((Convert.ToInt32(room.RoomNumber) * 15) % 480); // Spread over 8 hours
-
-                                // Assign staff member if available (in a real app, this would come from assignments)
-                                string assignedTo = "Unassigned";
-                                if (housekeepingStaff.Any())
+                                // Get assignment information if it exists
+                                HousekeepingAssignment? assignment = null;
+                                if (ViewBag.RoomAssignments != null && ViewBag.RoomAssignments.ContainsKey(room.RoomId))
                                 {
-                                    var staffIndex = Convert.ToInt32(room.RoomNumber) % housekeepingStaff.Count;
-                                    var staff = housekeepingStaff[staffIndex];
-                                    assignedTo = $"{staff.FirstName} {staff.LastName}";
+                                    assignment = ViewBag.RoomAssignments[room.RoomId];
                                 }
 
+                                // Determine priority based on assignment or status
+                                string priority = "Normal";
+                                if (assignment != null && !string.IsNullOrEmpty(assignment.Priority))
+                                {
+                                    priority = assignment.Priority;
+                                }
+                                else if (room.Status == "Needs Cleaning")
+                                {
+                                    priority = "High";
+                                }
+
+                                string priorityClass = priority == "High" ? "text-danger fw-bold" :
+                                (priority == "Urgent" ? "text-danger fw-bold" : "text-secondary");
+                                // Get assigned staff information
+                                string assignedTo = "Unassigned";
+                                if (assignment != null && assignment.Staff != null)
+                                {
+                                    var firstName = assignment.Staff.FirstName ?? string.Empty;
+                                    var lastName = assignment.Staff.LastName ?? string.Empty;
+                                    assignedTo = $"{firstName} {lastName}".Trim();
+                                    if (string.IsNullOrWhiteSpace(assignedTo))
+                                    {
+                                        assignedTo = "Unassigned";
+                                    }
+                                }
                                 <tr class="schedule-row @(room.Status == "Needs Cleaning" ? "table-warning" : "")" data-room="@room.RoomNumber">
                                     <td><strong>@room.RoomNumber</strong></td>
                                     <td>@room.Category</td>
@@ -100,10 +115,10 @@
                                     <td>
                                         <select class="form-select form-select-sm staff-select" data-room-id="@room.RoomId">
                                             <option value="" selected="@(assignedTo == "Unassigned")">Unassigned</option>
-                                            @foreach (var staff in housekeepingStaff)
+                                            @foreach (var staff in ViewBag.HousekeepingStaff)
                                             {
                                                 var staffFullName = $"{staff.FirstName} {staff.LastName}";
-                                                <option value="@staff.UserId" selected="@(assignedTo == staffFullName)">@staffFullName</option>
+                                                <option value="@staff.StaffId" selected="@(assignedTo == staffFullName)">@staffFullName</option>
                                             }
                                         </select>
                                     </td>
@@ -115,26 +130,16 @@
                                             </a>
                                             @if (room.Status == "Needs Cleaning")
                                             {
-                                                <div class="btn-group" role="group">
-                                                    <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a asp-action="ConfirmCleanRoom" asp-controller="Housekeeping" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-success">
-                                                        <i class="fas fa-check"></i> Mark Cleaned
-                                                    </a>
-                                                </div>
+                                                <a asp-action="ConfirmCleanRoom" asp-controller="Housekeeping" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-check"></i> Mark Cleaned
+                                                </a>
                                             }
                                             else
                                             {
-                                                <div class="btn-group" role="group">
-                                                    <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary schedule-btn"
-                                                            data-room-id="@room.RoomId" data-room-number="@room.RoomNumber">
-                                                        <i class="fas fa-clock"></i> Schedule
-                                                    </button>
-                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary schedule-btn"
+                                                        data-room-id="@room.RoomId" data-room-number="@room.RoomNumber">
+                                                    <i class="fas fa-clock"></i> Schedule
+                                                </button>
                                             }
                                         </div>
                                     </td>

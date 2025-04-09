@@ -393,43 +393,56 @@ namespace Hotel_Management_System.Controllers
         {
             try
             {
-                // Get all rooms needing cleaning
-                var needsCleaning = await _context.Rooms
+                // Get all rooms that need cleaning
+                var rooms = await _context.Rooms
                     .Where(r => r.Status == "Needs Cleaning")
                     .ToListAsync();
 
-                // Get all rooms not cleaned in the last 3 days
-                var threeDaysAgo = DateTime.Now.AddDays(-3);
-                var needsRoutineCleaning = await _context.Rooms
-                    .Where(r =>
-                        r.Status == "Available" &&
-                        (r.LastCleaned == null || r.LastCleaned <= threeDaysAgo))
+                // Get all active assignments from housekeeping staff
+                var assignments = await _context.HousekeepingAssignments
+                    .Include(a => a.Room)
+                    .Include(a => a.Staff)
+                    .Where(a => a.Status != "Completed")
                     .ToListAsync();
 
-                // Combine the lists, prioritizing rooms that need cleaning
-                var priorityRooms = needsCleaning.ToList();
-                foreach (var room in needsRoutineCleaning)
+                // Create a dictionary to quickly look up assignments by room ID
+                var roomAssignments = new Dictionary<int, HousekeepingAssignment>();
+                foreach (var assignment in assignments)
                 {
-                    if (!priorityRooms.Any(r => r.RoomId == room.RoomId))
+                    if (assignment.RoomId > 0) // Ensure valid roomId 
                     {
-                        priorityRooms.Add(room);
+                        roomAssignments[assignment.RoomId] = assignment;
                     }
                 }
 
                 // Get housekeeping staff
-                var housekeepingStaff = await _context.Users
-                    .Where(u => u.Role == "Housekeeping")
-                    .ToListAsync();
+                var housekeepingStaff = await _context.HousekeepingStaff
+                    .Where(s => s.IsActive)
+                    .ToListAsync() ?? new List<HousekeepingStaff>();
 
                 ViewBag.HousekeepingStaff = housekeepingStaff;
+                ViewBag.RoomAssignments = roomAssignments;
 
-                return View(priorityRooms);
+                // Get admin users for assignment tracking
+                var adminUsers = await _context.Users
+                    .Where(u => u.Role == "Admin" || u.Role == "FrontDesk")
+                    .ToListAsync() ?? new List<User>();
+
+                ViewBag.AdminUsers = adminUsers;
+
+                return View(rooms);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading cleaning schedule");
-                TempData["ErrorMessage"] = "An error occurred while loading the cleaning schedule: " + ex.Message;
-                return RedirectToAction(nameof(Index));
+                TempData["ErrorMessage"] = "An error occurred while loading cleaning schedule: " + ex.Message;
+
+                // Initialize empty collections to prevent null references
+                ViewBag.HousekeepingStaff = new List<HousekeepingStaff>();
+                ViewBag.RoomAssignments = new Dictionary<int, HousekeepingAssignment>();
+                ViewBag.AdminUsers = new List<User>();
+
+                return View(new List<Room>());
             }
         }
 
@@ -471,97 +484,117 @@ namespace Hotel_Management_System.Controllers
             }
         }
 
-        public IActionResult RoomAssignments()
+        public async Task<IActionResult> RoomAssignments()
         {
-            ViewBag.Title = "Room Assignments";
+            try
+            {
+                // Get all rooms
+                var rooms = await _context.Rooms.ToListAsync();
 
-            // Pending assignments count for badge
-            ViewBag.PendingAssignments = 3;
+                // Get all active assignments
+                var assignments = await _context.HousekeepingAssignments
+                    .Include(a => a.Room)
+                    .Include(a => a.Staff)
+                    .Where(a => a.Status != "Completed")
+                    .ToListAsync();
 
-            // Get all staff who have housekeeping role
-            // For demo, using mock data
-            ViewBag.StaffMembers = new List<string> {
-            "John Doe",
-            "Jane Smith",
-            "Robert Johnson"
-        };
-
-            var assignments = _context.Rooms
-                .Where(r => r.Status == "Needs Cleaning" || r.Status == "Maintenance")
-                .OrderBy(r => r.RoomNumber)
-                .ToList();
-
-            return View(assignments);
-        }
-        public IActionResult MaintenanceRequests()
-        {
-            ViewBag.Title = "Maintenance Requests";
-
-            // Pending requests count for badge
-            ViewBag.PendingRequests = 2;
-
-            // For demo purposes
-            var maintenanceRequests = _context.Rooms
-                .Where(r => r.Status == "Maintenance" ||
-                       (!string.IsNullOrEmpty(r.MaintenanceNotes) &&
-                        r.MaintenanceNotes.Contains("repair")))
-                .Select(r => new
+                // Create a dictionary to map roomId to assignment
+                var roomAssignments = new Dictionary<int, HousekeepingAssignment>();
+                foreach (var assignment in assignments)
                 {
-                    Room = r,
-                    RequestDate = DateTime.Now.AddDays(-(r.RoomId % 5)),
-                    Description = r.MaintenanceNotes ?? "General maintenance",
-                    Status = r.Status == "Maintenance" ? "In Progress" : "Pending"
-                })
-                .ToList();
+                    roomAssignments[assignment.RoomId] = assignment;
+                }
 
-            return View(maintenanceRequests);
+                ViewBag.StaffMembers = await _context.HousekeepingStaff
+                    .Where(s => s.IsActive)
+                    .ToListAsync();
+
+                ViewBag.RoomAssignments = roomAssignments;
+
+                return View(rooms);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading room assignments");
+                TempData["ErrorMessage"] = "An error occurred while loading room assignments: " + ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+        public async Task<IActionResult> MaintenanceRequests()
+        {
+            try
+            {
+                // Get rooms in maintenance status
+                var maintenanceRooms = await _context.Rooms
+                    .Where(r => r.Status == "Maintenance")
+                    .ToListAsync();
+
+                // Create a list to hold maintenance request objects
+                var maintenanceRequests = new List<dynamic>();
+
+                foreach (var room in maintenanceRooms)
+                {
+                    // Parse maintenance notes to get requests
+                    var notes = string.IsNullOrEmpty(room.MaintenanceNotes)
+                        ? new List<string>()
+                        : room.MaintenanceNotes.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                    // Get the most recent note
+                    var latestNote = notes.FirstOrDefault() ?? "";
+
+                    // Extract timestamp if available
+                    DateTime requestDate = DateTime.Now;
+                    if (latestNote.StartsWith("[") && latestNote.Contains("]"))
+                    {
+                        var datePart = latestNote.Substring(1, latestNote.IndexOf("]") - 1);
+                        if (DateTime.TryParse(datePart, out DateTime parsedDate))
+                        {
+                            requestDate = parsedDate;
+                        }
+                    }
+
+                    // Create a dynamic object with request details
+                    maintenanceRequests.Add(new
+                    {
+                        Room = room,
+                        Description = latestNote,
+                        RequestDate = requestDate,
+                        Status = "Pending" // Default status
+                    });
+                }
+
+                return View(maintenanceRequests);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading maintenance requests");
+                TempData["ErrorMessage"] = "An error occurred while loading maintenance requests: " + ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
         public IActionResult Inventory()
         {
-            ViewBag.Title = "Housekeeping Inventory";
-
-            // Mock inventory data (replace with actual database data)
-            var inventoryItems = new List<object>
+            try
+            {
+                // Create sample inventory items (in real app, this would come from database)
+                var inventoryItems = new List<dynamic>
         {
-            new {
-                ItemName = "Towels",
-                TotalStock = 200,
-                InUse = 80,
-                Available = 120,
-                ReorderLevel = 50
-            },
-            new {
-                ItemName = "Bed Sheets",
-                TotalStock = 150,
-                InUse = 75,
-                Available = 75,
-                ReorderLevel = 40
-            },
-            new {
-                ItemName = "Pillows",
-                TotalStock = 120,
-                InUse = 60,
-                Available = 60,
-                ReorderLevel = 30
-            },
-            new {
-                ItemName = "Soap Bars",
-                TotalStock = 500,
-                InUse = 100,
-                Available = 400,
-                ReorderLevel = 100
-            },
-            new {
-                ItemName = "Shampoo Bottles",
-                TotalStock = 450,
-                InUse = 90,
-                Available = 360,
-                ReorderLevel = 90
-            }
+            new { ItemName = "Cleaning Solution", TotalStock = 50, InUse = 12, Available = 38, ReorderLevel = 10 },
+            new { ItemName = "Towels", TotalStock = 200, InUse = 120, Available = 80, ReorderLevel = 50 },
+            new { ItemName = "Bed Sheets", TotalStock = 150, InUse = 100, Available = 50, ReorderLevel = 30 },
+            new { ItemName = "Soap Bars", TotalStock = 300, InUse = 150, Available = 150, ReorderLevel = 100 },
+            new { ItemName = "Toilet Paper", TotalStock = 400, InUse = 200, Available = 200, ReorderLevel = 100 }
         };
 
-            ViewBag.InventoryItems = inventoryItems;
-            return View();
+                ViewBag.InventoryItems = inventoryItems;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading inventory");
+                TempData["ErrorMessage"] = "An error occurred while loading inventory: " + ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
