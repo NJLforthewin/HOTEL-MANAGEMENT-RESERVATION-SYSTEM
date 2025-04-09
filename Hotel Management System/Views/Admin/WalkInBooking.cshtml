@@ -1,0 +1,89 @@
+﻿@model Hotel_Management_System.Models.Booking
+
+@{
+    ViewData["Title"] = "New Walk-In Booking";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<div class="container-fluid p-0">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Walk-In Booking</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="WalkInBooking" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="BookingType" value="Walk-In" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Guest Name</label>
+                        <input asp-for="GuestName" class="form-control" required />
+                        <span asp-validation-for="GuestName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" type="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Room</label>
+                        <select asp-for="RoomId" class="form-select" required>
+                            <option value="">Select a room</option>
+                            @foreach (var room in ViewBag.Rooms)
+                            {
+                                <option value="@room.RoomId" data-price="@room.PricePerNight">@room.Category Room @room.RoomNumber - $@room.PricePerNight per night</option>
+                            }
+                        </select>
+                        <span asp-validation-for="RoomId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Check-In Date</label>
+                        <input asp-for="CheckInDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Check-Out Date</label>
+                        <input asp-for="CheckOutDate" class="form-control" type="date" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
+                        <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Method</label>
+                        <select asp-for="PaymentMethod" class="form-select" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Estimated Total</label>
+                        <input id="estimatedTotal" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Create Booking</button>
+                    <a asp-action="Dashboard" class="btn btn-outline-secondary ms-2">Back to Dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/walk-in-booking.js"></script>

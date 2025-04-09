@@ -1,0 +1,146 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Room>
+
+@{
+    ViewData["Title"] = "Manage Housekeeping";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Manage Housekeeping</h1>
+        <div>
+            <a href="@Url.Action("HousekeepingDashboard", "Admin")" class="d-none d-sm-inline-block btn btn-sm btn-outline-primary shadow-sm me-2">
+                <i class="fas fa-arrow-left fa-sm text-primary-50 me-2"></i>Back to Dashboard
+            </a>
+            <a href="@Url.Action("Index", "Housekeeping")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-clipboard-list fa-sm text-white-50 me-2"></i>Housekeeping View
+            </a>
+        </div>
+    </div>
+
+    <!-- Room Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Room Cleaning Status</h6>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="filter-all">All Rooms</button>
+                <button type="button" class="btn btn-sm btn-outline-warning" id="filter-needs-cleaning">Needs Cleaning</button>
+                <button type="button" class="btn btn-sm btn-outline-success" id="filter-available">Available</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="filter-occupied">Occupied</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="filter-maintenance">Maintenance</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Room</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Last Cleaned</th>
+                            <th>Maintenance Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model)
+                        {
+                            <tr class="room-row @(room.Status?.ToLower().Replace(" ", "-") ?? "available")">
+                                <td>
+                                    <strong>@room.RoomNumber</strong>
+                                </td>
+                                <td>@(room.Category ?? "Standard")</td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(room.Status) || room.Status == "Available")
+                                    {
+                                        <span class="badge bg-success">Available</span>
+                                    }
+                                    else if (room.Status == "Occupied" || room.Status == "Booked")
+                                    {
+                                        <span class="badge bg-danger">@room.Status</span>
+                                    }
+                                    else if (room.Status == "Needs Cleaning")
+                                    {
+                                        <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                    }
+                                    else if (room.Status == "Maintenance")
+                                    {
+                                        <span class="badge bg-secondary">Maintenance</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@room.Status</span>
+                                    }
+                                </td>
+                                <td>
+                                    @(room.LastCleaned.HasValue ? room.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm") : "Not recorded")
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(room.MaintenanceNotes))
+                                    {
+                                        <span class="d-inline-block text-truncate" style="max-width: 150px;" title="@room.MaintenanceNotes">
+                                            @room.MaintenanceNotes
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-500">No notes</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex">
+                                        <a href="@Url.Action("RoomDetails", "Housekeeping", new { id = room.RoomId })" class="btn btn-circle btn-sm btn-primary me-1">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("AssignHousekeeping", "Admin", new { roomId = room.RoomId })" class="btn btn-circle btn-sm btn-warning me-1">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-circle btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton@(room.RoomId)" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton@(room.RoomId)">
+                                                <li>
+                                                    <form method="post" action="@Url.Action("MarkRoomStatus", "Admin", new { roomId = room.RoomId, status = "Available" })">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-check-circle text-success me-2"></i>Mark Available
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="@Url.Action("MarkRoomStatus", "Admin", new { roomId = room.RoomId, status = "Needs Cleaning" })">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-broom text-warning me-2"></i>Mark Needs Cleaning
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="@Url.Action("MarkRoomStatus", "Admin", new { roomId = room.RoomId, status = "Maintenance" })">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-tools text-secondary me-2"></i>Mark Maintenance
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="@Url.Action("EditRoom", "Admin", new { id = room.RoomId })">
+                                                        <i class="fas fa-edit text-primary me-2"></i>Edit Room
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/housekeeping.js"></script>
+}

@@ -1,0 +1,118 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Room>
+@{
+    ViewData["Title"] = "Available Rooms";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<div class="frontdesk-container">
+    <div class="section-title">
+        <h1>Available Rooms</h1>
+        <p>View all currently available rooms for booking</p>
+    </div>
+
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-door-open"></i> Available Rooms</h3>
+            <div class="d-flex gap-2">
+                <form method="get" class="d-flex gap-2">
+                    <div class="dropdown">
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Types</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var category in ViewBag.Categories)
+                                {
+                                    if (ViewBag.SelectedCategory == category)
+                                    {
+                                        <option value="@category" selected>@category</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@category">@category</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                        @if (ViewBag.SortBy == "roomNumber")
+                        {
+                            <option value="roomNumber" selected>Room Number</option>
+                        }
+                        else
+                        {
+                            <option value="roomNumber">Room Number</option>
+                        }
+
+                        @if (ViewBag.SortBy == "price")
+                        {
+                            <option value="price" selected>Price</option>
+                        }
+                        else
+                        {
+                            <option value="price">Price</option>
+                        }
+
+                        @if (ViewBag.SortBy == "category")
+                        {
+                            <option value="category" selected>Type</option>
+                        }
+                        else
+                        {
+                            <option value="category">Type</option>
+                        }
+
+                        @if (ViewBag.SortBy == "capacity")
+                        {
+                            <option value="capacity" selected>Capacity</option>
+                        }
+                        else
+                        {
+                            <option value="capacity">Capacity</option>
+                        }
+                    </select>
+                </form>
+                <a href="@Url.Action("AvailableRooms", "FrontDesk")" class="btn btn-outline-primary"><i class="fas fa-sync-alt me-2"></i>Refresh</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info">No available rooms found.</div>
+            }
+            else
+            {
+                <table class="frontdesk-table">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Type</th>
+                            <th>Capacity</th>
+                            <th>Rate</th>
+                            <th>Last Cleaned</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model)
+                        {
+                            <tr>
+                                <td class="room-number">@room.RoomNumber</td>
+                                <td>@room.Category</td>
+                                <td>@room.Capacity Guests</td>
+                                <td>$@room.PricePerNight.ToString("0.00")</td>
+                                <td>@(room.LastCleaned?.ToString("MMM dd, yyyy, h:mm tt") ?? "Not recorded")</td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="@Url.Action("WalkIn", "FrontDesk", new { roomId = room.RoomId })" class="btn-action checkin"><i class="fas fa-user-plus"></i>Book</a>
+                                        <a href="@Url.Action("Details", "Room", new { id = room.RoomId })" class="btn-action confirm"><i class="fas fa-info-circle"></i>Details</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

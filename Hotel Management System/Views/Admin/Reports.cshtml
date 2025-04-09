@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = "Reports";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+    var reportType = ViewBag.ReportType;
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+}
+
+<div id="reportTypePage" data-report-type="@reportType"></div>
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Hotel Performance Reports</h4>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label for="reportType" class="form-label">Report Type</label>
+                    <select name="reportType" id="reportType" class="form-select">
+                        <option value="occupancy" selected="@(reportType == "occupancy")">Occupancy Report</option>
+                        <option value="revenue" selected="@(reportType == "revenue")">Revenue Report</option>
+                        <option value="bookings" selected="@(reportType == "bookings")">Bookings Report</option>
+                        <option value="guests" selected="@(reportType == "guests")">Guest Analysis</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate" value="@startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate" value="@endDate">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-chart-line me-2"></i>Generate Report
+                    </button>
+                </div>
+            </form>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            @if (reportType == "occupancy")
+            {
+                    <partial name="_OccupancyReport" />
+            }
+            else if (reportType == "revenue")
+            {
+                    <partial name="_RevenueReport" />
+            }
+            else if (reportType == "bookings")
+            {
+                    <partial name="_BookingsReport" />
+            }
+            else if (reportType == "guests")
+            {
+                    <partial name="_GuestsReport" />
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="~/js/reports.js"></script>
+}

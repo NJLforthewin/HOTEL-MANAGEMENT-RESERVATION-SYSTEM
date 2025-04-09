@@ -1,0 +1,85 @@
+﻿<div class="report-container guests-report">
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">Total Guests</h6>
+                    <h2 class="mb-0">@ViewBag.TotalGuests</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">New Guests</h6>
+                    <h2 class="mb-0">@ViewBag.NewGuests</h2>
+                    <small class="text-muted">@ViewBag.NewGuestPercentage% of total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Returning Guests</h6>
+                    <h2 class="mb-0">@ViewBag.ReturningGuests</h2>
+                    <small class="text-muted">@(100 - ViewBag.NewGuestPercentage)% of total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Bookings per Guest</h6>
+                    <h2 class="mb-0">@ViewBag.BookingsPerGuest</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Guest Type</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="guestTypeChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Top Guests</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Guest Name</th>
+                                <th>Bookings</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var count = 1;
+                                foreach (var guest in ViewBag.TopGuests)
+                                {
+                                    <tr>
+                                        <td>@count</td>
+                                        <td>@guest.Name</td>
+                                        <td>@guest.BookingCount</td>
+                                        <td>$@guest.TotalSpent.ToString("N2")</td>
+                                    </tr>
+                                    count++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

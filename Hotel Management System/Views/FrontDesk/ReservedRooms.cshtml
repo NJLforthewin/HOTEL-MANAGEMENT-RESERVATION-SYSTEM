@@ -1,0 +1,115 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Booking>
+@{
+    ViewData["Title"] = "Reserved Rooms";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<div class="frontdesk-container">
+    <div class="section-title">
+        <h1>Reserved Rooms</h1>
+        <p>View all upcoming reservations that are not yet checked in</p>
+    </div>
+
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-calendar-alt"></i> Upcoming Reservations</h3>
+            <div class="d-flex gap-2">
+                <form method="get" class="d-flex gap-2">
+                    <select name="arrivalDate" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Dates</option>
+                        @if (ViewBag.ArrivalDates != null)
+                        {
+                            foreach (var date in ViewBag.ArrivalDates)
+                            {
+                                if (ViewBag.SelectedDate?.Date == date)
+                                {
+                                    <option value="@date.ToString("yyyy-MM-dd")" selected>@date.ToString("MMM dd, yyyy")</option>
+                                }
+                                else
+                                {
+                                    <option value="@date.ToString("yyyy-MM-dd")">@date.ToString("MMM dd, yyyy")</option>
+                                }
+                            }
+                        }
+                    </select>
+                    <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                        @if (ViewBag.SortBy == "arrivaldate")
+                        {
+                            <option value="arrivaldate" selected>Arrival Date</option>
+                        }
+                        else
+                        {
+                            <option value="arrivaldate">Arrival Date</option>
+                        }
+
+                        @if (ViewBag.SortBy == "guestname")
+                        {
+                            <option value="guestname" selected>Guest Name</option>
+                        }
+                        else
+                        {
+                            <option value="guestname">Guest Name</option>
+                        }
+
+                        @if (ViewBag.SortBy == "roomnumber")
+                        {
+                            <option value="roomnumber" selected>Room Number</option>
+                        }
+                        else
+                        {
+                            <option value="roomnumber">Room Number</option>
+                        }
+                    </select>
+                </form>
+                <a href="@Url.Action("ReservedRooms", "FrontDesk")" class="btn btn-outline-primary"><i class="fas fa-sync-alt me-2"></i>Refresh</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info">No reserved rooms found.</div>
+            }
+            else
+            {
+                <table class="frontdesk-table">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Guest</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model)
+                        {
+                            var isArrivalToday = booking.CheckInDate.Date == DateTime.Today;
+                            <tr class="@(isArrivalToday ? "arrival-today" : "")">
+                                <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                <td class="guest-name">@booking.GuestName</td>
+                                <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                <td>@booking.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                                <td><span class="badge bg-primary">@booking.Status</span></td>
+                                <td>
+                                    <div class="actions">
+                                        <form method="post" action="@Url.Action("ConfirmCheckIn", "FrontDesk")" style="display: inline;">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action checkin"><i class="fas fa-check-circle"></i>Check In</button>
+                                        </form>
+                                        <a href="@Url.Action("BookingDetails", "FrontDesk", new { id = booking.BookingId })" class="btn-action info"><i class="fas fa-info-circle"></i>Details</a>
+                                        <form method="post" action="@Url.Action("CancelBooking", "Booking")" style="display: inline;">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action cancel"><i class="fas fa-times-circle"></i>Cancel</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

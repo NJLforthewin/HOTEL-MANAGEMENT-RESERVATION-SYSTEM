@@ -1,0 +1,332 @@
+﻿/* bookinglayout.css - Making it match the Admin panel */
+
+:root {
+    --booking-primary: #61122f; /* Burgundy color */
+    --booking-dark: #2c3640; /* Dark sidebar background */
+    --booking-text: #ffffff; /* White text */
+    --booking-sidebar-width: 200px; /* Wider sidebar to match the image */
+    --booking-header-height: 60px;
+    --booking-footer-height: 30px;
+}
+
+/* Body Styles */
+body.booking-body {
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Header Styles */
+.frontdesk-header {
+    height: var(--booking-header-height);
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: var(--booking-sidebar-width);
+    right: 0;
+    z-index: 1000;
+    color: #212529;
+}
+
+.header-container {
+    height: 100%;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+    .header-actions .user-name {
+        display: flex;
+        align-items: center;
+        color: #495057;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+        .header-actions .user-name i {
+            font-size: 1.25rem;
+            margin-right: 0.5rem;
+            color: #495057;
+        }
+
+    .header-actions .logout-btn {
+        color: #495057;
+        text-decoration: none;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+    }
+
+        .header-actions .logout-btn:hover {
+            color: var(--booking-primary);
+        }
+
+        .header-actions .logout-btn i {
+            margin-right: 0.375rem;
+        }
+
+/* Main Container with Sidebar */
+.frontdesk-main {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.frontdesk-sidebar {
+    width: var(--booking-sidebar-width);
+    background-color: var(--booking-dark);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 1020;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 0;
+    background-color: var(--booking-primary);
+    height: var(--booking-header-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--booking-text);
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    font-weight: 600;
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin: 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem; /* More horizontal padding */
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 0.875rem;
+    white-space: nowrap; /* Prevent text wrapping */
+    line-height: 1.4;
+}
+
+    .sidebar-link i {
+        width: 20px; /* Wider icon area */
+        margin-right: 1rem; /* More space between icon and text */
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-align: center;
+    }
+
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+
+    .sidebar-link.active {
+        background-color: var(--booking-primary);
+        color: white;
+    }
+
+        .sidebar-link.active i {
+            color: white;
+        }
+
+.sidebar-footer {
+    padding: 1rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+}
+
+    .sidebar-footer .support-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+        .sidebar-footer .support-info i {
+            font-size: 1.25rem;
+            margin-bottom: 0.375rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+    .sidebar-footer .support-phone {
+        font-weight: 600;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+    }
+
+/* Content Wrapper */
+.content-wrapper {
+    flex: 1;
+    margin-left: var(--booking-sidebar-width);
+    margin-top: var(--booking-header-height);
+    padding: 1.5rem;
+    width: calc(100% - var(--booking-sidebar-width));
+}
+
+.content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Footer Styles */
+.frontdesk-footer {
+    background-color: white;
+    color: #6c757d;
+    border-top: 1px solid #eee;
+    position: fixed;
+    bottom: 0;
+    left: var(--booking-sidebar-width);
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0;
+    z-index: 1000;
+    font-size: 0.75rem;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.frontdesk-footer p {
+    margin: 0;
+}
+
+/* Mobile toggle button */
+.menu-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1040;
+}
+
+/* Adjust frontdesk-container to work with the new layout */
+.frontdesk-container {
+    background-color: transparent;
+    min-height: initial;
+    padding: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    :root {
+        --booking-sidebar-width: 0;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .frontdesk-sidebar {
+        transform: translateX(-200px);
+        transition: transform 0.3s ease;
+        width: 200px;
+    }
+
+        .frontdesk-sidebar.show {
+            transform: translateX(0);
+        }
+
+    .content-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .frontdesk-header {
+        left: 0;
+    }
+
+    .frontdesk-footer {
+        left: 0;
+    }
+
+    .header-container {
+        padding: 0 1rem;
+    }
+}
+/* Remove Bootstrap's dropdown indicator but keep the small icon */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Style the username dropdown to match the image */
+.header-actions .dropdown .user-name {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.875rem;
+}
+
+    .header-actions .dropdown .user-name i {
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+        color: #666;
+    }

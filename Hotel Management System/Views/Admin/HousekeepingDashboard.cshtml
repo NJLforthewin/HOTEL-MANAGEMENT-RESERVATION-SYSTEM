@@ -1,0 +1,300 @@
+﻿@{
+    ViewData["Title"] = "Admin Housekeeping Dashboard";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Housekeeping Management</h1>
+        <a href="@Url.Action("ManageHousekeeping", "Admin")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-tasks fa-sm text-white-50 me-2"></i>Manage Rooms
+        </a>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Available Rooms Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Available Rooms
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.AvailableCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Needs Cleaning Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Needs Cleaning
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.NeedsCleaningCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-broom fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Occupied Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Occupied Rooms
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.OccupiedCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bed fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Maintenance
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.MaintenanceCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tools fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Staff List Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Housekeeping Staff</h6>
+                    <div>
+                        <span class="badge bg-primary me-2">@ViewBag.StaffCount Total</span>
+                        <a href="@Url.Action("AddHousekeepingStaff", "Admin")" class="btn btn-sm btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>Add Staff
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.HousekeepingStaff != null && ViewBag.HousekeepingStaff.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var staff in ViewBag.HousekeepingStaff)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-3 burgundy-bg text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
+                                                        @(staff.FirstName[0])@(staff.LastName[0])
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-weight-bold">@staff.FirstName @staff.LastName</div>
+                                                        <small class="text-muted">@staff.Email</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    if (ViewBag.StaffStatus != null && ViewBag.StaffStatus.ContainsKey(staff.StaffId))
+                                                    {
+                                                        var staffStatus = ViewBag.StaffStatus[staff.StaffId];
+                                                        var status = staffStatus.Item1; // Use Item1 instead of Status
+                                                        var count = staffStatus.Item2; // Use Item2 instead of Count
+
+                                                        var statusClass = status == "Available" ? "bg-success" :
+                                                        (status == "Busy" ? "bg-danger" : "bg-warning");
+
+                                                        <span class="badge @statusClass">@status</span>
+                                                        <div class="small mt-1">@count task(s)</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">Available</span>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("EditHousekeepingStaff", "Admin", new { id = staff.StaffId })" class="btn btn-circle btn-sm btn-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="@Url.Action("AssignTasks", "Admin", new { staffId = staff.StaffId })" class="btn btn-circle btn-sm btn-warning">
+                                                    <i class="fas fa-tasks"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-slash fa-3x mb-3 text-gray-300"></i>
+                            <p class="text-gray-500">No housekeeping staff found.</p>
+                            <a href="@Url.Action("AddHousekeepingStaff", "Admin")" class="btn btn-sm btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Add Staff
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Cleanings Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Cleanings</h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentCleanings != null && ViewBag.RecentCleanings.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var room in ViewBag.RecentCleanings)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>Room @room.RoomNumber</strong>
+                                                <div class="small text-gray-500">@room.Category</div>
+                                            </td>
+                                            <td>
+                                                @(room.LastCleaned?.ToString("MMM dd, HH:mm") ?? "N/A")
+                                            </td>
+                                            <td>
+                                                @if (string.IsNullOrEmpty(room.Status) || room.Status == "Available")
+                                                {
+                                                    <span class="badge bg-success">Available</span>
+                                                }
+                                                else if (room.Status == "Occupied" || room.Status == "Booked")
+                                                {
+                                                    <span class="badge bg-danger">@room.Status</span>
+                                                }
+                                                else if (room.Status == "Needs Cleaning")
+                                                {
+                                                    <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                                }
+                                                else if (room.Status == "Maintenance")
+                                                {
+                                                    <span class="badge bg-secondary">Maintenance</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">@room.Status</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-broom fa-3x mb-3 text-gray-300"></i>
+                            <p class="text-gray-500">No recent cleanings found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Row -->
+    <div class="row">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Cleaning Performance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="cleaningPerformanceChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="me-3">
+                            <i class="fas fa-circle text-success"></i> Completed
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-circle text-primary"></i> Assigned
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-circle text-warning"></i> Pending
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (ViewBag.ChartLabels != null)
+    {
+        <!-- Reference the external script file -->
+        <script src="~/js/housekeepingChart.js"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    // Parse the JSON data
+                    var chartLabels = JSON.parse('@Html.Raw(ViewBag.ChartLabels)');
+                    var completedData = JSON.parse('@Html.Raw(ViewBag.CompletedData)');
+                    var assignedData = JSON.parse('@Html.Raw(ViewBag.AssignedData)');
+                    var pendingData = JSON.parse('@Html.Raw(ViewBag.PendingData)');
+
+                    // Initialize the chart with the parsed data
+                    initializeCleaningPerformanceChart(chartLabels, completedData, assignedData, pendingData);
+                } catch (error) {
+                    console.error("Error initializing chart:", error);
+                }
+            });
+        </script>
+    }
+
+</div>

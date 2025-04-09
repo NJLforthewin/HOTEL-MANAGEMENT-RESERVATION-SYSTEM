@@ -1,0 +1,188 @@
+﻿@{
+    ViewData["Title"] = "Assign Housekeeping Staff";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+
+    var room = ViewBag.Room as Hotel_Management_System.Models.Room;
+    var housekeepingStaff = ViewBag.HousekeepingStaff as List<Hotel_Management_System.Models.HousekeepingStaff>;
+    var currentAssignment = ViewBag.CurrentAssignment as Hotel_Management_System.Models.HousekeepingAssignment;
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Assign Staff to Room @(room?.RoomNumber ?? "Unknown")</h1>
+        <a href="@Url.Action("ManageHousekeeping", "Admin")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50 me-2"></i>Back to Housekeeping
+        </a>
+    </div>
+
+    @if (room == null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> Room information not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Room Details Card -->
+            <div class="col-md-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Room Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4 font-weight-bold">Room Number:</div>
+                            <div class="col-md-8">@room.RoomNumber</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 font-weight-bold">Category:</div>
+                            <div class="col-md-8">@(room.Category ?? "Standard")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 font-weight-bold">Status:</div>
+                            <div class="col-md-8">
+                                @if (string.IsNullOrEmpty(room.Status) || room.Status == "Available")
+                                {
+                                    <span class="badge bg-success">Available</span>
+                                }
+                                else if (room.Status == "Occupied" || room.Status == "Booked")
+                                {
+                                    <span class="badge bg-danger">@room.Status</span>
+                                }
+                                else if (room.Status == "Needs Cleaning")
+                                {
+                                    <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                }
+                                else if (room.Status == "Maintenance")
+                                {
+                                    <span class="badge bg-secondary">Maintenance</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">@room.Status</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 font-weight-bold">Last Cleaned:</div>
+                            <div class="col-md-8">
+                                @(room.LastCleaned.HasValue ? room.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm") : "Not recorded")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (currentAssignment != null)
+                {
+                    <div class="card shadow mb-4 border-left-warning">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-warning">Current Assignment</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4 font-weight-bold">Assigned To:</div>
+                                <div class="col-md-8">@currentAssignment.Staff.FirstName @currentAssignment.Staff.LastName</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 font-weight-bold">Priority:</div>
+                                <div class="col-md-8">
+                                    @if (currentAssignment.Priority == "Urgent")
+                                    {
+                                        <span class="badge bg-danger">Urgent</span>
+                                    }
+                                    else if (currentAssignment.Priority == "Normal")
+                                    {
+                                        <span class="badge bg-primary">Normal</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@currentAssignment.Priority</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 font-weight-bold">Status:</div>
+                                <div class="col-md-8">@currentAssignment.Status</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 font-weight-bold">Assigned At:</div>
+                                <div class="col-md-8">@currentAssignment.AssignedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(currentAssignment.Notes))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-md-4 font-weight-bold">Notes:</div>
+                                    <div class="col-md-8">@currentAssignment.Notes</div>
+                                </div>
+                            }
+                            <form method="post" action="@Url.Action("CompleteAssignment", "Admin")">
+                                <input type="hidden" name="assignmentId" value="@currentAssignment.AssignmentId" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check-circle me-1"></i> Mark Completed
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Assignment Form Card -->
+            <div class="col-md-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Assign Staff</h6>
+                    </div>
+                    <div class="card-body">
+                        @if (housekeepingStaff == null || !housekeepingStaff.Any())
+                        {
+                            <div class="alert alert-warning">
+                                <strong>Note:</strong> No housekeeping staff available. Please add staff members first.
+                            </div>
+                        }
+                        else
+                        {
+                            <form method="post" action="@Url.Action("AssignStaffToRoom", "Admin")">
+                                <input type="hidden" name="roomId" value="@room.RoomId" />
+                                @Html.AntiForgeryToken()
+
+                                <div class="mb-3">
+                                    <label for="staffId" class="form-label">Select Housekeeping Staff</label>
+                                    <select name="staffId" id="staffId" class="form-control" required>
+                                        <option value="">-- Select Staff Member --</option>
+                                        @foreach (var staff in housekeepingStaff)
+                                        {
+                                            <option value="@staff.StaffId" selected="@(currentAssignment != null && currentAssignment.StaffId == staff.StaffId)">
+                                                @staff.FirstName @staff.LastName - @staff.Position
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select name="priority" id="priority" class="form-control">
+                                        <option value="Low" selected="@(currentAssignment != null && currentAssignment.Priority == "Low")">Low</option>
+                                        <option value="Normal" selected="@(currentAssignment == null || currentAssignment.Priority == "Normal")">Normal</option>
+                                        <option value="Urgent" selected="@(currentAssignment != null && currentAssignment.Priority == "Urgent")">Urgent</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Notes</label>
+                                    <textarea name="notes" id="notes" class="form-control" rows="4">@(currentAssignment != null ? currentAssignment.Notes : "")</textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i> @(currentAssignment != null ? "Update Assignment" : "Assign Staff")
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

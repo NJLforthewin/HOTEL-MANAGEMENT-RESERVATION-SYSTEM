@@ -1,0 +1,302 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Room>
+@{
+    ViewData["Title"] = "Cleaning Schedule";
+    Layout = "~/Views/Shared/HousekeepingLayout.cshtml";
+
+    var today = DateTime.Now.ToString("dddd, MMMM d, yyyy");
+    var tomorrow = DateTime.Now.AddDays(1).ToString("dddd, MMMM d, yyyy");
+
+    var housekeepingStaff = ViewBag.HousekeepingStaff as List<Hotel_Management_System.Models.User> ?? new List<Hotel_Management_System.Models.User>();
+}
+
+<div class="container-fluid">
+    <div class="card housekeeping-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Cleaning Schedule</h5>
+            <div>
+                <a href="#" class="btn btn-sm btn-outline-primary active" id="todayBtn">Today</a>
+                <a href="#" class="btn btn-sm btn-outline-secondary" id="tomorrowBtn">Tomorrow</a>
+                <a href="#" class="btn btn-sm btn-outline-success" id="weekBtn">This Week</a>
+                <a asp-action="CleaningSchedule" class="btn btn-sm btn-outline-info ms-2">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="schedule-date mb-3">
+                <h4 id="scheduleDate">@today</h4>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Last Cleaned</th>
+                            <th>Assigned To</th>
+                            <th>Priority</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var room in Model)
+                            {
+                                // Determine priority based on status
+                                string priority = room.Status == "Needs Cleaning" ? "High" : "Normal";
+                                string priorityClass = priority == "High" ? "text-danger fw-bold" : "text-secondary";
+
+                                // Create a deterministic but varied cleaning time estimate based on room number
+                                var baseTime = DateTime.Today.AddHours(8); // Start at 8 AM
+                                var cleaningTime = baseTime.AddMinutes((Convert.ToInt32(room.RoomNumber) * 15) % 480); // Spread over 8 hours
+
+                                // Assign staff member if available (in a real app, this would come from assignments)
+                                string assignedTo = "Unassigned";
+                                if (housekeepingStaff.Any())
+                                {
+                                    var staffIndex = Convert.ToInt32(room.RoomNumber) % housekeepingStaff.Count;
+                                    var staff = housekeepingStaff[staffIndex];
+                                    assignedTo = $"{staff.FirstName} {staff.LastName}";
+                                }
+
+                                <tr class="schedule-row @(room.Status == "Needs Cleaning" ? "table-warning" : "")" data-room="@room.RoomNumber">
+                                    <td><strong>@room.RoomNumber</strong></td>
+                                    <td>@room.Category</td>
+                                    <td>
+                                        @if (room.Status == "Needs Cleaning")
+                                        {
+                                            <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                        }
+                                        else if (room.Status == "Available")
+                                        {
+                                            <span class="badge bg-success">Available</span>
+                                        }
+                                        else if (room.Status == "Occupied")
+                                        {
+                                            <span class="badge bg-danger">Occupied</span>
+                                        }
+                                        else if (room.Status == "Maintenance")
+                                        {
+                                            <span class="badge bg-secondary">Maintenance</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark">@room.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (room.LastCleaned.HasValue)
+                                        {
+                                            <span>@room.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not recorded</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm staff-select" data-room-id="@room.RoomId">
+                                            <option value="" selected="@(assignedTo == "Unassigned")">Unassigned</option>
+                                            @foreach (var staff in housekeepingStaff)
+                                            {
+                                                var staffFullName = $"{staff.FirstName} {staff.LastName}";
+                                                <option value="@staff.UserId" selected="@(assignedTo == staffFullName)">@staffFullName</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td><span class="@priorityClass">@priority</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (room.Status == "Needs Cleaning")
+                                            {
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a asp-action="ConfirmCleanRoom" asp-controller="Housekeeping" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-check"></i> Mark Cleaned
+                                                    </a>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary schedule-btn"
+                                                            data-room-id="@room.RoomId" data-room-number="@room.RoomNumber">
+                                                        <i class="fas fa-clock"></i> Schedule
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x mb-3 text-muted"></i>
+                                    <p>No rooms currently need cleaning. Great job!</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scheduleModalLabel">Schedule Cleaning</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <input type="hidden" id="scheduleRoomId">
+                    <div class="mb-3">
+                        <p>Room: <strong id="scheduleRoomNumber"></strong></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scheduleDate" class="form-label">Cleaning Date</label>
+                        <input type="date" class="form-control" id="cleaningDate" required min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cleaningTime" class="form-label">Cleaning Time</label>
+                        <select class="form-select" id="cleaningTime" required>
+                            <option value="08:00">8:00 AM</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="assignedStaff" class="form-label">Assign To</label>
+                        <select class="form-select" id="assignedStaff" required>
+                            <option value="" selected disabled>Select staff member</option>
+                            @foreach (var staff in housekeepingStaff)
+                            {
+                                <option value="@staff.UserId">@staff.FirstName @staff.LastName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cleaningNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="cleaningNotes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Date navigation
+            $('#todayBtn, #tomorrowBtn, #weekBtn').on('click', function(e) {
+                e.preventDefault();
+
+                // Remove active class from all buttons
+                $('#todayBtn, #tomorrowBtn, #weekBtn').removeClass('active');
+
+                // Add active class to clicked button
+                $(this).addClass('active');
+
+                // Update displayed date
+                if (this.id === 'todayBtn') {
+                    $('#scheduleDate').text('@today');
+                } else if (this.id === 'tomorrowBtn') {
+                    $('#scheduleDate').text('@tomorrow');
+                } else if (this.id === 'weekBtn') {
+                    $('#scheduleDate').text('This Week: @today - @DateTime.Now.AddDays(7).ToString("MMM d, yyyy")');
+                }
+
+                // In a real app, this would reload data for the selected date via AJAX
+            });
+
+            // Handle schedule button click
+            $('.schedule-btn').on('click', function() {
+                var roomId = $(this).data('room-id');
+                var roomNumber = $(this).data('room-number');
+
+                $('#scheduleRoomId').val(roomId);
+                $('#scheduleRoomNumber').text(roomNumber);
+
+                // Set default date to tomorrow
+                var tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                $('#cleaningDate').val(tomorrow.toISOString().split('T')[0]);
+
+                $('#scheduleModal').modal('show');
+            });
+
+            // Save schedule button
+            $('#saveScheduleBtn').on('click', function() {
+                var roomId = $('#scheduleRoomId').val();
+                var date = $('#cleaningDate').val();
+                var time = $('#cleaningTime').val();
+                var staffId = $('#assignedStaff').val();
+
+                if (!date || !time || !staffId) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // In a real app, this would submit the form data via AJAX
+                // For demo purposes, we'll just show a success message and close the modal
+                alert('Cleaning scheduled successfully');
+                $('#scheduleModal').modal('hide');
+            });
+
+            // Staff assignment dropdown change
+            $('.staff-select').on('change', function() {
+                var roomId = $(this).data('room-id');
+                var staffId = $(this).val();
+
+                // In a real app, this would submit the assignment via AJAX
+                console.log(`Room ${roomId} assigned to staff ${staffId}`);
+                // Example of what you'd do in a real app:
+                /*
+                $.ajax({
+                    url: '/Housekeeping/AssignStaff',
+                    type: 'POST',
+                    data: {
+                        roomId: roomId,
+                        staffId: staffId
+                    },
+                    success: function(response) {
+                        // Handle success
+                    },
+                    error: function(error) {
+                        // Handle error
+                    }
+                });
+                */
+            });
+        });
+    </script>
+}

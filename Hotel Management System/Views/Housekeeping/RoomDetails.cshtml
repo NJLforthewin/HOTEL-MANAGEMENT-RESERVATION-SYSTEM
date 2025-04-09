@@ -1,0 +1,359 @@
+﻿@model Hotel_Management_System.Models.Room
+@{
+    ViewData["Title"] = "Room Details";
+    Layout = "~/Views/Shared/HousekeepingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Room @Model.RoomNumber</h2>
+            <p class="text-muted mb-0">@Model.Category</p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Room Info Card -->
+            <div class="card housekeeping-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Room Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Room Number</p>
+                            <h5>@Model.RoomNumber</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Category</p>
+                            <h5>@Model.Category</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Status</p>
+                            @{
+                                string statusBadge = Model.Status switch
+                                {
+                                    "Available" => "bg-success",
+                                    "Occupied" => "bg-danger",
+                                    "Needs Cleaning" => "bg-warning text-dark",
+                                    "Maintenance" => "bg-secondary",
+                                    _ => "bg-light text-dark"
+                                };
+                            }
+                            <h5><span class="badge @statusBadge">@Model.Status</span></h5>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Price Per Night</p>
+                            <h5>$@Model.PricePerNight.ToString("0.00")</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Max Capacity</p>
+                            <h5>@Model.Capacity Guests</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-muted mb-1">Last Cleaned</p>
+                            <h5>
+                                @if (Model.LastCleaned.HasValue)
+                                {
+                                    @Model.LastCleaned.Value.ToString("MMM dd, yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not recorded</span>
+                                }
+                            </h5>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="text-muted mb-1">Maintenance Notes</p>
+                            <form asp-action="UpdateMaintenanceNotes" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                <div class="form-group">
+                                    <textarea name="maintenanceNotes" class="form-control" rows="4">@Model.MaintenanceNotes</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-2" style="background-color: #61122f; border-color: #61122f;">
+                                    <i class="fas fa-save me-2"></i>Save Notes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    @if (Model.Status == "Needs Cleaning")
+                    {
+                        <a asp-action="MarkCleaned" asp-route-id="@Model.RoomId" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Mark as Cleaned
+                        </a>
+                    }
+                    else if (Model.Status != "Maintenance" && Model.Status != "Occupied")
+                    {
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#maintenanceModal">
+                            <i class="fas fa-tools me-2"></i>Mark for Maintenance
+                        </button>
+                    }
+                    else if (Model.Status == "Maintenance")
+                    {
+                        <a asp-action="MarkCleaned" asp-route-id="@Model.RoomId" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Maintenance Complete
+                        </a>
+                    }
+
+                    @if (Model.Status != "Needs Cleaning" && Model.Status != "Maintenance" && Model.Status != "Occupied")
+                    {
+                        <form asp-action="MarkNeedsCleaning" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.RoomId" />
+                            <button type="submit" class="btn btn-warning text-dark">
+                                <i class="fas fa-broom me-2"></i>Mark Needs Cleaning
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <!-- Current Booking -->
+            @if (ViewBag.CurrentBooking != null)
+            {
+                var booking = ViewBag.CurrentBooking;
+                <div class="card housekeeping-card mb-4 room-status-occupied">
+                    <div class="card-header">
+                        <h5 class="mb-0">Current Occupant</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="text-muted mb-1">Guest Name</p>
+                                <h5>@booking.GuestName</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted mb-1">Contact</p>
+                                <h5>@booking.PhoneNumber</h5>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <p class="text-muted mb-1">Check-In</p>
+                                <h5>@booking.CheckInDate.ToString("MMM dd, yyyy")</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-muted mb-1">Check-Out</p>
+                                <h5>@booking.CheckOutDate.ToString("MMM dd, yyyy")</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-muted mb-1">Total Stay</p>
+                                <h5>@((booking.CheckOutDate - booking.CheckInDate).Days) Nights</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Cleaning Checklist -->
+            <div class="card housekeeping-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Cleaning Checklist</h5>
+                </div>
+                <div class="card-body">
+                    <div class="cleaning-checklist">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check1">
+                            <label class="form-check-label" for="check1">Clean bathroom and restock amenities</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check2">
+                            <label class="form-check-label" for="check2">Change bedding and make bed</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check3">
+                            <label class="form-check-label" for="check3">Vacuum carpet and mop floors</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check4">
+                            <label class="form-check-label" for="check4">Dust furniture and fixtures</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check5">
+                            <label class="form-check-label" for="check5">Empty trash and clean waste bins</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="check6">
+                            <label class="form-check-label" for="check6">Check and restock minibar items</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check7">
+                            <label class="form-check-label" for="check7">Inspect room for maintenance issues</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="button" id="completeCleaningBtn" class="btn btn-success"
+                    @(Model.Status != "Needs Cleaning" ? "disabled" : "")>
+                        <i class="fas fa-check-circle me-2"></i>Complete Cleaning
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Booking History Card -->
+            <div class="card housekeeping-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Booking History</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (ViewBag.BookingHistory != null && ViewBag.BookingHistory.Count > 0)
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var booking in ViewBag.BookingHistory)
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">@booking.GuestName</h6>
+                                            <small class="text-muted">
+                                                @booking.CheckInDate.ToString("MMM dd") - @booking.CheckOutDate.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <span class="badge @(booking.Status == "Checked-Out" ? "bg-success" : "bg-primary")">
+                                            @booking.Status
+                                        </span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x mb-3 text-gray-300"></i>
+                            <p class="text-gray-500">No recent bookings found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card housekeeping-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" onclick="window.print()" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-print me-2"></i>Print Room Report
+                        </a>
+                        <a asp-action="CleaningSchedule" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-calendar-alt me-2"></i>View Cleaning Schedule
+                        </a>
+                        <button type="button" class="btn btn-outline-warning btn-block" data-bs-toggle="modal" data-bs-target="#maintenanceModal">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Modal -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="MarkMaintenance" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.RoomId">
+                <div class="modal-header" style="background-color: #61122f; color: white;">
+                    <h5 class="modal-title" id="maintenanceModalLabel">Maintenance Request</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Submit maintenance request for Room <strong>@Model.RoomNumber</strong>:</p>
+                    <div class="form-group mb-3">
+                        <label for="maintenanceNote" class="form-label">Maintenance Issue:</label>
+                        <textarea name="maintenanceNote" id="maintenanceNote" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="urgentIssue" name="urgentIssue">
+                        <label class="form-check-label" for="urgentIssue">
+                            This is an urgent issue
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #61122f; border-color: #61122f;">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Checklist functionality
+            $('.form-check-input').change(function() {
+                var allChecked = true;
+                $('.form-check-input').each(function() {
+                    if (!$(this).prop('checked')) {
+                        allChecked = false;
+                        return false;
+                    }
+                });
+
+                if (allChecked) {
+                    $('#completeCleaningBtn').addClass('active').prop('disabled', false);
+                }
+            });
+
+            // Complete cleaning button
+            $('#completeCleaningBtn').click(function() {
+                var allChecked = true;
+                $('.form-check-input').each(function() {
+                    if (!$(this).prop('checked')) {
+                        allChecked = false;
+                        return false;
+                    }
+                });
+
+                if (allChecked) {
+                    window.location.href = '@Url.Action("MarkCleaned", new { id = Model.RoomId })';
+                } else {
+                    alert('Please complete all cleaning tasks before marking the room as cleaned.');
+                }
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
+}

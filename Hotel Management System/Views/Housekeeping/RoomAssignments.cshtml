@@ -1,0 +1,254 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Room>
+@{
+    ViewData["Title"] = "Room Assignments";
+    Layout = "~/Views/Shared/HousekeepingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card housekeeping-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> Room Assignments</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignmentModal">
+                <i class="fas fa-plus me-1"></i> Assign Rooms
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Last Cleaned</th>
+                            <th>Assigned To</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var room in Model)
+                            {
+                                string statusClass = "";
+                                string statusBadge = "";
+
+                                switch (room.Status)
+                                {
+                                    case "Available":
+                                        statusClass = "room-status-available";
+                                        statusBadge = "bg-success";
+                                        break;
+                                    case "Occupied":
+                                        statusClass = "room-status-occupied";
+                                        statusBadge = "bg-danger";
+                                        break;
+                                    case "Needs Cleaning":
+                                        statusClass = "room-status-cleaning";
+                                        statusBadge = "bg-warning text-dark";
+                                        break;
+                                    case "Maintenance":
+                                        statusClass = "room-status-maintenance";
+                                        statusBadge = "bg-secondary";
+                                        break;
+                                    default:
+                                        statusClass = "";
+                                        statusBadge = "bg-light text-dark";
+                                        break;
+                                }
+
+                                var assignedStaff = ViewBag.StaffMembers[room.RoomId % ViewBag.StaffMembers.Count];
+
+                                <tr class="room-row @statusClass">
+                                    <td><strong>@room.RoomNumber</strong></td>
+                                    <td>@room.Category</td>
+                                    <td><span class="badge @statusBadge">@room.Status</span></td>
+                                    <td>
+                                        @if (room.LastCleaned.HasValue)
+                                        {
+                                            <span>@room.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not recorded</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="staff-name">@assignedStaff</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary reassign-btn"
+                                                    data-bs-toggle="modal" data-bs-target="#reassignModal"
+                                                    data-room-id="@room.RoomId" data-room-number="@room.RoomNumber"
+                                                    data-staff="@assignedStaff">
+                                                <i class="fas fa-user-edit"></i> Reassign
+                                            </button>
+                                            <a asp-action="RoomDetails" asp-route-id="@room.RoomId" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-clipboard-check fa-3x mb-3 text-muted"></i>
+                                    <p>No rooms need assignment at this time.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignmentModal" tabindex="-1" aria-labelledby="assignmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignmentModalLabel">Assign Rooms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignmentForm">
+                    <div class="mb-3">
+                        <label for="staffSelect" class="form-label">Staff Member</label>
+                        <select class="form-select" id="staffSelect" required>
+                            <option value="" selected disabled>Select staff member</option>
+                            @foreach (var staff in ViewBag.StaffMembers)
+                            {
+                                <option value="@staff">@staff</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rooms to Assign</label>
+                        <div class="room-checkboxes">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var room in Model)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="@room.RoomId" id="room@(room.RoomId)">
+                                        <label class="form-check-label" for="room@(room.RoomId)">
+                                            Room @(room.RoomNumber) (@room.Status)
+                                        </label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">No rooms available for assignment.</p>
+                            }
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveAssignBtn">Save Assignment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reassign Modal -->
+<div class="modal fade" id="reassignModal" tabindex="-1" aria-labelledby="reassignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reassignModalLabel">Reassign Room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reassignForm">
+                    <input type="hidden" id="reassignRoomId">
+                    <div class="mb-3">
+                        <p>Room: <strong id="reassignRoomNumber"></strong></p>
+                        <p>Current Assignment: <span id="currentStaff"></span></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newStaffSelect" class="form-label">New Staff Assignment</label>
+                        <select class="form-select" id="newStaffSelect" required>
+                            <option value="" selected disabled>Select staff member</option>
+                            @foreach (var staff in ViewBag.StaffMembers)
+                            {
+                                <option value="@staff">@staff</option>
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveReassignBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle reassign modal
+            $('.reassign-btn').on('click', function() {
+                var roomId = $(this).data('room-id');
+                var roomNumber = $(this).data('room-number');
+                var currentStaff = $(this).data('staff');
+
+                $('#reassignRoomId').val(roomId);
+                $('#reassignRoomNumber').text(roomNumber);
+                $('#currentStaff').text(currentStaff);
+            });
+
+            // Save assignments button
+            $('#saveAssignBtn').on('click', function() {
+                // In a real app, this would submit the form data via AJAX
+                // For demo purposes, we'll just show a success message and close the modal
+                var staff = $('#staffSelect').val();
+                var selectedRooms = [];
+
+                $('.room-checkboxes input:checked').each(function() {
+                    selectedRooms.push($(this).val());
+                });
+
+                if (!staff || selectedRooms.length === 0) {
+                    alert('Please select a staff member and at least one room');
+                    return;
+                }
+
+                // Mock success message
+                alert(`Assigned ${selectedRooms.length} room(s) to ${staff}`);
+                $('#assignmentModal').modal('hide');
+            });
+
+            // Save reassignment button
+            $('#saveReassignBtn').on('click', function() {
+                // In a real app, this would submit the form data via AJAX
+                // For demo purposes, we'll just show a success message and close the modal
+                var roomId = $('#reassignRoomId').val();
+                var roomNumber = $('#reassignRoomNumber').text();
+                var newStaff = $('#newStaffSelect').val();
+
+                if (!newStaff) {
+                    alert('Please select a new staff member');
+                    return;
+                }
+
+                // Update the staff name in the table
+                $(`.room-row td[data-room-id="${roomId}"] .staff-name`).text(newStaff);
+
+                // Mock success message
+                alert(`Room ${roomNumber} reassigned to ${newStaff}`);
+                $('#reassignModal').modal('hide');
+            });
+        });
+    </script>
+}

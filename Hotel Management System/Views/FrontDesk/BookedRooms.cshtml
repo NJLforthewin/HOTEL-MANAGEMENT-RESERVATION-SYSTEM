@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Hotel_Management_System.Models.Booking>
+@{
+    ViewData["Title"] = "Booked Rooms";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<div class="frontdesk-container">
+    <div class="section-title">
+        <h1>Booked Rooms</h1>
+        <p>View all rooms that are currently booked by guests</p>
+    </div>
+
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-bed"></i> Currently Booked Rooms</h3>
+            <div class="d-flex gap-2">
+                <form method="get" class="d-flex gap-2">
+                    <input type="date" name="checkOutDate" class="form-control" value="@(ViewBag.CheckOutDate?.ToString("yyyy-MM-dd"))" onchange="this.form.submit()" />
+                    <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                        @if (ViewBag.SortBy == "roomNumber")
+                        {
+                            <option value="roomNumber" selected>Room Number</option>
+                        }
+                        else
+                        {
+                            <option value="roomNumber">Room Number</option>
+                        }
+
+                        @if (ViewBag.SortBy == "guestName")
+                        {
+                            <option value="guestName" selected>Guest Name</option>
+                        }
+                        else
+                        {
+                            <option value="guestName">Guest Name</option>
+                        }
+
+                        @if (ViewBag.SortBy == "checkoutdate")
+                        {
+                            <option value="checkoutdate" selected>Check-out Date</option>
+                        }
+                        else
+                        {
+                            <option value="checkoutdate">Check-out Date</option>
+                        }
+                    </select>
+                </form>
+                <a href="@Url.Action("BookedRooms", "FrontDesk")" class="btn btn-outline-primary"><i class="fas fa-sync-alt me-2"></i>Refresh</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info">No booked rooms found.</div>
+            }
+            else
+            {
+                <table class="frontdesk-table">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Guest</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model)
+                        {
+                            var isCheckoutToday = booking.CheckOutDate.Date == DateTime.Today;
+                            <tr class="@(isCheckoutToday ? "checkout-today" : "")">
+                                <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                <td class="guest-name">@booking.GuestName</td>
+                                <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                <td>@booking.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                                <td><span class="badge bg-success">Checked In</span></td>
+                                <td>
+                                    <div class="actions">
+                                        <form method="post" action="@Url.Action("CheckOut", "Booking")" style="display: inline;">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action confirm"><i class="fas fa-sign-out-alt"></i>Checkout</button>
+                                        </form>
+                                        <a href="@Url.Action("BookingDetails", "FrontDesk", new { id = booking.BookingId })" class="btn-action info"><i class="fas fa-info-circle"></i>Details</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

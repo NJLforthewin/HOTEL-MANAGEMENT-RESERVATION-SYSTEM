@@ -1,0 +1,236 @@
+﻿/* Auth Pages Shared Styles */
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Common Background for Auth Pages */
+.login-body,
+.register-body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/luxury-hotel.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Common Box Styles */
+#login-box,
+#register-box {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+    max-width: 450px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* Hotel Branding */
+.hotel-branding {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.hotel-logo {
+    width: 70px;
+    height: auto;
+    margin-bottom: 15px;
+    transition: transform 0.3s;
+}
+
+.hotel-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #61122f;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.mt-2.text-muted {
+    font-size: 15px;
+    color: #777 !important;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+    text-align: left;
+}
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: #444;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-align: left;
+    }
+
+        .form-group label i {
+            color: #61122f;
+            width: 18px;
+            margin-right: 8px;
+        }
+
+.form-control {
+    height: 50px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(97, 18, 47, 0.1);
+        border-color: #61122f;
+    }
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-check-input {
+    margin-top: 0;
+    margin-right: 8px;
+}
+
+.form-check-label {
+    font-weight: normal;
+    font-size: 14px;
+    color: #555;
+}
+
+.form-text {
+    color: #777;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Buttons */
+.btn-info,
+.btn-primary {
+    background-color: #61122f;
+    border: none;
+    border-radius: 4px;
+    height: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-info:hover,
+    .btn-primary:hover {
+        background-color: #4d0f25;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(97, 18, 47, 0.2);
+        color: white;
+    }
+
+/* Dividers */
+.login-divider {
+    margin: 25px 0;
+    text-align: center;
+    position: relative;
+}
+
+    .login-divider:before,
+    .login-divider:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 45%;
+        height: 1px;
+        background-color: #eee;
+    }
+
+    .login-divider:before {
+        left: 0;
+    }
+
+    .login-divider:after {
+        right: 0;
+    }
+
+    .login-divider span {
+        background-color: white;
+        padding: 0 15px;
+        position: relative;
+        z-index: 2;
+        color: #999;
+        font-size: 14px;
+    }
+
+/* Links */
+.return-links {
+    text-align: center;
+    font-size: 14px;
+}
+
+    .return-links p {
+        margin-bottom: 8px;
+    }
+
+    .return-links a {
+        color: #61122f;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+        .return-links a:hover {
+            color: #4d0f25;
+            text-decoration: underline;
+        }
+
+/* Error Messages */
+.error-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #dc3545;
+    display: flex;
+    align-items: center;
+}
+
+    .error-message i {
+        margin-right: 8px;
+        font-size: 16px;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    #login-box,
+    #register-box {
+        padding: 30px 20px;
+    }
+
+    .row .col-md-6 {
+        padding: 0 5px;
+    }
+}
+
+@media (min-height: 800px) {
+    #login-box,
+    #register-box {
+        margin-bottom: 50px;
+    }
+}

@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Walk In Booking";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<div class="frontdesk-container">
+    <div class="section-title">
+        <h1>Walk In Booking</h1>
+        <p>Create a new walk-in booking for guests arriving without a reservation</p>
+    </div>
+
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-user-plus"></i> New Walk-In Booking</h3>
+        </div>
+        <div class="section-body p-4">
+            <form id="walkInForm" method="post" action="@Url.Action("ProcessWalkIn", "FrontDesk")">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" name="GuestName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" name="Phone" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Room Type</label>
+                            <select class="form-select" name="RoomType" required>
+                                <option value="">Select Room Type</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Check-In Date</label>
+                            <input type="date" class="form-control" name="CheckInDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Check-Out Date</label>
+                            <input type="date" class="form-control" name="CheckOutDate" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Number of Guests</label>
+                            <input type="number" class="form-control" name="GuestCount" value="1" min="1" max="4" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="PaymentMethod" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Special Requests</label>
+                    <textarea class="form-control" name="SpecialRequests" rows="3"></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-2"></i>Create Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

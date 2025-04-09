@@ -1,0 +1,217 @@
+﻿@{
+    ViewData["Title"] = "Assign Cleaning Tasks";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+
+    var staff = ViewBag.Staff;
+    var roomsNeedingCleaning = ViewBag.RoomsNeedingCleaning as List<Hotel_Management_System.Models.Room>;
+    var existingAssignments = ViewBag.ExistingAssignments as List<Hotel_Management_System.Models.HousekeepingAssignment>;
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Assign Cleaning Tasks</h1>
+        <a href="@Url.Action("HousekeepingDashboard", "Admin")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50 me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Staff Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Staff Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="mx-auto burgundy-bg text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 28px;">
+                            @(staff.FirstName[0])@(staff.LastName[0])
+                        </div>
+                        <h4 class="font-weight-bold">@staff.FirstName @staff.LastName</h4>
+                        <p class="text-muted">@staff.Position</p>
+
+                        <div class="text-center mb-3">
+                            @{
+                                var assignmentCount = existingAssignments?.Count ?? 0;
+                                var statusLabel = assignmentCount == 0 ? "Available" :
+                                (assignmentCount >= 5 ? "Busy" : "Working");
+                                var statusClass = statusLabel == "Available" ? "bg-success" :
+                                (statusLabel == "Busy" ? "bg-danger" : "bg-warning");
+                            }
+                            <span class="badge @statusClass">@statusLabel</span>
+                            <div class="mt-2">
+                                <span class="font-weight-bold">@assignmentCount</span> active assignment(s)
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(staff.Email))
+                        {
+                            <p><i class="fas fa-envelope me-2"></i>@staff.Email</p>
+                        }
+                        @if (!string.IsNullOrEmpty(staff.PhoneNumber))
+                        {
+                            <p><i class="fas fa-phone me-2"></i>@staff.PhoneNumber</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Assignments -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Current Assignments</h6>
+                </div>
+                <div class="card-body">
+                    @if (existingAssignments != null && existingAssignments.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Priority</th>
+                                        <th>Assigned</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var assignment in existingAssignments)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>Room @assignment.Room.RoomNumber</strong>
+                                                <div class="small text-gray-500">@assignment.Room.Category</div>
+                                            </td>
+                                            <td>
+                                                @if (assignment.Priority == "High")
+                                                {
+                                                    <span class="badge bg-danger">High</span>
+                                                }
+                                                else if (assignment.Priority == "Low")
+                                                {
+                                                    <span class="badge bg-info">Low</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Normal</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @assignment.AssignedAt.ToString("MMM dd, HH:mm")
+                                            </td>
+                                            <td>
+                                                @(string.IsNullOrEmpty(assignment.Notes) ? "No notes" : assignment.Notes)
+                                            </td>
+                                            <td>
+                                                <form asp-action="RemoveAssignment" asp-controller="Admin" method="post" onsubmit="return confirm('Are you sure you want to remove this assignment?');">
+                                                    <input type="hidden" name="assignmentId" value="@assignment.AssignmentId" />
+                                                    <input type="hidden" name="staffId" value="@staff.StaffId" />
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-circle btn-sm btn-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x mb-3 text-gray-300"></i>
+                            <p class="text-gray-500">No current assignments found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign New Task -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Assign New Task</h6>
+                </div>
+                <div class="card-body">
+                    @if (roomsNeedingCleaning != null && roomsNeedingCleaning.Count > 0)
+                    {
+                        <form asp-action="AssignTaskToStaff" asp-controller="Admin" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="staffId" value="@staff.StaffId" />
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="roomId" class="form-label">Select Room</label>
+                                    <select name="roomId" id="roomId" class="form-control" required>
+                                        <option value="">-- Select Room --</option>
+                                        @foreach (var room in roomsNeedingCleaning)
+                                        {
+                                            <option value="@room.RoomId">Room @room.RoomNumber - @room.Category</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select name="priority" id="priority" class="form-control">
+                                        <option value="Normal">Normal</option>
+                                        <option value="High">High</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="notes" class="form-label">Notes</label>
+                                    <input type="text" name="notes" id="notes" class="form-control" placeholder="Optional notes or instructions">
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Assign Task
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p class="text-gray-500">All rooms are clean. No rooms need cleaning at this time.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,263 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Maintenance Requests";
+    Layout = "~/Views/Shared/HousekeepingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card housekeeping-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tools me-2"></i> Maintenance Requests</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+                <i class="fas fa-plus me-1"></i> New Request
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="request-filters mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="all">All Requests</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-filter="Pending">Pending</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-filter="In Progress">In Progress</button>
+                    <button type="button" class="btn btn-sm btn-outline-success" data-filter="Completed">Completed</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Room #</th>
+                            <th>Request Date</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var request in Model)
+                            {
+                                string statusClass = "";
+
+                                switch (request.Status)
+                                {
+                                    case "Pending":
+                                        statusClass = "bg-warning text-dark";
+                                        break;
+                                    case "In Progress":
+                                        statusClass = "bg-info text-white";
+                                        break;
+                                    case "Completed":
+                                        statusClass = "bg-success";
+                                        break;
+                                    default:
+                                        statusClass = "bg-secondary";
+                                        break;
+                                }
+
+                                <tr class="request-row" data-status="@request.Status">
+                                    <td><strong>@request.Room.RoomNumber</strong></td>
+                                    <td>@request.RequestDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@request.Description</td>
+                                    <td><span class="badge @statusClass">@request.Status</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="#" class="btn btn-sm btn-outline-primary view-details-btn"
+                                               data-bs-toggle="modal" data-bs-target="#requestDetailsModal"
+                                               data-room-id="@request.Room.RoomId"
+                                               data-room-number="@request.Room.RoomNumber"
+                                               data-description="@request.Description"
+                                               data-status="@request.Status"
+                                               data-date="@request.RequestDate.ToString("MMM dd, yyyy")">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            @if (request.Status != "Completed")
+                                            {
+                                                <a asp-action="MarkCleaned" asp-route-id="@request.Room.RoomId" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-check"></i> Mark Fixed
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-tools fa-3x mb-3 text-muted"></i>
+                                    <p>No maintenance requests found.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Request Modal -->
+<div class="modal fade" id="newRequestModal" tabindex="-1" aria-labelledby="newRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newRequestModalLabel">New Maintenance Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newRequestForm" asp-action="AddMaintenanceNote" method="post">
+                    <div class="mb-3">
+                        <label for="roomSelect" class="form-label">Room</label>
+                        <select class="form-select" id="roomSelect" name="roomId" required>
+                            <option value="" selected disabled>Select room</option>
+                            @foreach (var item in Model)
+                            {
+                                <option value="@item.Room.RoomId">Room @item.Room.RoomNumber</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="maintenanceNote" class="form-label">Description</label>
+                        <textarea class="form-control" id="maintenanceNote" name="maintenanceNote" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prioritySelect" class="form-label">Priority</label>
+                        <select class="form-select" id="prioritySelect">
+                            <option value="Normal">Normal</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="newRequestForm" class="btn btn-primary">Submit Request</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Details Modal -->
+<div class="modal fade" id="requestDetailsModal" tabindex="-1" aria-labelledby="requestDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestDetailsModalLabel">Maintenance Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="request-details">
+                    <p><strong>Room:</strong> <span id="detailRoomNumber"></span></p>
+                    <p><strong>Date Submitted:</strong> <span id="detailDate"></span></p>
+                    <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Description:</strong></label>
+                        <p id="detailDescription"></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Maintenance Notes:</strong></label>
+                        <div class="notes-timeline">
+                            <div class="note-item">
+                                <span class="note-time">Today, 10:30 AM</span>
+                                <p class="note-text">Checked issue with plumbing. Will need replacement parts.</p>
+                            </div>
+                            <div class="note-item">
+                                <span class="note-time">Yesterday, 3:15 PM</span>
+                                <p class="note-text">Initial inspection completed. Issue confirmed.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="addNoteText" class="form-label"><strong>Add Note:</strong></label>
+                        <textarea class="form-control" id="addNoteText" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="markCompletedBtn">Mark Completed</button>
+                <button type="button" class="btn btn-primary" id="addNoteBtn">Add Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Filter buttons
+            $('.request-filters .btn').on('click', function() {
+                var filter = $(this).data('filter');
+
+                // Update active state
+                $('.request-filters .btn').removeClass('active');
+                $(this).addClass('active');
+
+                // Filter rows
+                if (filter === 'all') {
+                    $('.request-row').show();
+                } else {
+                    $('.request-row').hide();
+                    $('.request-row[data-status="' + filter + '"]').show();
+                }
+            });
+
+            // View details button
+            $('.view-details-btn').on('click', function() {
+                var roomNumber = $(this).data('room-number');
+                var description = $(this).data('description');
+                var status = $(this).data('status');
+                var date = $(this).data('date');
+
+                $('#detailRoomNumber').text(roomNumber);
+                $('#detailDescription').text(description);
+                $('#detailStatus').text(status);
+                $('#detailDate').text(date);
+
+                // Update buttons based on status
+                if (status === 'Completed') {
+                    $('#markCompletedBtn').hide();
+                } else {
+                    $('#markCompletedBtn').show();
+                }
+            });
+
+            // Add note button
+            $('#addNoteBtn').on('click', function() {
+                var note = $('#addNoteText').val();
+                if (!note) {
+                    alert('Please enter a note');
+                    return;
+                }
+
+                // In a real app, this would submit via AJAX
+                // For demo, we'll add to the timeline
+                var now = new Date();
+                var timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                $('.notes-timeline').prepend(`
+                    <div class="note-item">
+                        <span class="note-time">Today, ${timeStr}</span>
+                        <p class="note-text">${note}</p>
+                    </div>
+                `);
+
+                $('#addNoteText').val('');
+            });
+
+            // Mark completed button
+            $('#markCompletedBtn').on('click', function() {
+                // In a real app, this would submit via AJAX
+                alert('Maintenance has been marked as completed');
+                $('#requestDetailsModal').modal('hide');
+            });
+        });
+    </script>
+}

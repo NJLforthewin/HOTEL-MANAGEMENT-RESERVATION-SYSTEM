@@ -1,0 +1,63 @@
+﻿@model Hotel_Management_System.Models.Room
+@{
+    ViewData["Title"] = "Confirm Room Cleaning";
+    Layout = "~/Views/Shared/HousekeepingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card housekeeping-card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-broom me-2"></i> Confirm Room Cleaning</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h4>Confirm Room Cleaning</h4>
+                <p>Are you sure you want to mark Room @Model.RoomNumber as cleaned?</p>
+
+                <div class="mt-4">
+                    <form asp-action="MarkCleaned" asp-controller="Housekeeping" method="post">
+                        <input type="hidden" name="id" value="@Model.RoomId" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Yes, mark as cleaned
+                        </button>
+                        <a href="@Url.Action("CleaningSchedule", "Housekeeping")" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Room Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Room Number:</strong> @Model.RoomNumber</p>
+                            <p><strong>Category:</strong> @Model.Category</p>
+                            <p>
+                                <strong>Current Status:</strong>
+                                @if (Model.Status == "Needs Cleaning")
+                                {
+                                    <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@Model.Status</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Last Cleaned:</strong>
+                                @(Model.LastCleaned.HasValue ? Model.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm") : "Not recorded")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

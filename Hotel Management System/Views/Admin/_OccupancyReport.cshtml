@@ -1,0 +1,59 @@
+﻿<div class="report-container occupancy-report">
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Total Rooms</h6>
+                    <h2 class="mb-0">@ViewBag.TotalRooms</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Occupied Room Days</h6>
+                    <h2 class="mb-0">@ViewBag.OccupiedRoomDays</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Total Room Days</h6>
+                    <h2 class="mb-0">@ViewBag.TotalRoomDays</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">Occupancy Rate</h6>
+                    <h2 class="mb-0">@ViewBag.OccupancyRate%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Occupancy by Room Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryOccupancyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Occupancy Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="occupancyTrendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

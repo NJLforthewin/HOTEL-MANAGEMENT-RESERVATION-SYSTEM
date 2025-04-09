@@ -1,0 +1,92 @@
+﻿<div class="report-container revenue-report">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">Total Revenue</h6>
+                    <h2 class="mb-0">$@ViewBag.TotalRevenue.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Average Booking Value</h6>
+                    <h2 class="mb-0">$@ViewBag.AvgBookingValue.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Bookings</h6>
+                    <h2 class="mb-0">@ViewBag.BookingCount</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Revenue by Payment Method</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="paymentChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Revenue by Room Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryRevenueChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Revenue Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in ViewBag.RevenueByCategory)
+                            {
+                                <tr>
+                                    <td>@item.Category</td>
+                                    <td>$@item.Amount.ToString("N2")</td>
+                                    <td>@item.Percentage%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Revenue Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueTrendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

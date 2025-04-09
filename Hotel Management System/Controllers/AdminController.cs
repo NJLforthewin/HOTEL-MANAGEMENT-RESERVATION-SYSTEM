@@ -883,10 +883,11 @@ namespace Hotel_Management_System.Controllers
                     // Continue with empty room list
                 }
 
-                ViewBag.Available = rooms.Count(r => r.Status == "Available");
-                ViewBag.Occupied = rooms.Count(r => r.Status == "Occupied" || r.Status == "Booked");
-                ViewBag.NeedsCleaning = rooms.Count(r => r.Status == "Needs Cleaning");
-                ViewBag.Maintenance = rooms.Count(r => r.Status == "Maintenance");
+                // Updated variable names to match the view
+                ViewBag.AvailableCount = rooms.Count(r => r.Status == "Available");
+                ViewBag.OccupiedCount = rooms.Count(r => r.Status == "Occupied" || r.Status == "Booked");
+                ViewBag.NeedsCleaningCount = rooms.Count(r => r.Status == "Needs Cleaning");
+                ViewBag.MaintenanceCount = rooms.Count(r => r.Status == "Maintenance");
 
                 // Get recent cleaning records
                 var recentCleanings = new List<Room>();
@@ -923,9 +924,6 @@ namespace Hotel_Management_System.Controllers
                         .Where(s => s.IsActive)
                         .ToListAsync();
 
-                    ViewBag.HousekeepingStaff = housekeepingStaff;
-                    ViewBag.StaffCount = housekeepingStaff.Count;
-
                     // Get active assignments
                     var activeAssignments = await _context.HousekeepingAssignments
                         .Include(a => a.Room)
@@ -934,6 +932,46 @@ namespace Hotel_Management_System.Controllers
                         .ToListAsync();
 
                     ViewBag.ActiveAssignments = activeAssignments;
+
+                    // Create a dictionary to store tuples of status and count for each staff
+                    var staffStatus = new Dictionary<int, Tuple<string, int>>();
+
+                    // Calculate status for each staff member
+                    foreach (var staff in housekeepingStaff)
+                    {
+                        var staffAssignmentCount = activeAssignments.Count(a => a.StaffId == staff.StaffId);
+
+                        string status;
+                        if (staffAssignmentCount == 0)
+                        {
+                            status = "Available";
+                        }
+                        else if (staffAssignmentCount >= 5)
+                        {
+                            status = "Busy";
+                        }
+                        else
+                        {
+                            status = "Working";
+                        }
+
+                        staffStatus[staff.StaffId] = new Tuple<string, int>(status, staffAssignmentCount);
+                    }
+
+                    ViewBag.HousekeepingStaff = housekeepingStaff;
+                    ViewBag.StaffCount = housekeepingStaff.Count;   
+                    ViewBag.StaffStatus = staffStatus;
+
+                    // Add chart data for monthly cleaning performance
+                    var labels = new List<string>() { "Jan", "Feb", "Mar", "Apr", "May", "Jun" };
+                    var completedData = new List<int>() { 30, 28, 32, 27, 34, 29 };
+                    var assignedData = new List<int>() { 35, 32, 37, 31, 38, 36 };
+                    var pendingData = new List<int>() { 5, 4, 5, 4, 4, 7 };
+
+                    ViewBag.ChartLabels = System.Text.Json.JsonSerializer.Serialize(labels);
+                    ViewBag.CompletedData = System.Text.Json.JsonSerializer.Serialize(completedData);
+                    ViewBag.AssignedData = System.Text.Json.JsonSerializer.Serialize(assignedData);
+                    ViewBag.PendingData = System.Text.Json.JsonSerializer.Serialize(pendingData);
                 }
                 catch (Exception ex)
                 {
@@ -941,6 +979,7 @@ namespace Hotel_Management_System.Controllers
                     ViewBag.HousekeepingStaff = new List<HousekeepingStaff>();
                     ViewBag.StaffCount = 0;
                     ViewBag.ActiveAssignments = new List<HousekeepingAssignment>();
+                    ViewBag.StaffStatus = new Dictionary<int, Tuple<string, int>>();
                 }
 
                 return View();
@@ -1298,6 +1337,285 @@ namespace Hotel_Management_System.Controllers
                 return RedirectToAction(nameof(ManageHousekeeping));
             }
         }
+
+        // GET: Admin/AddHousekeepingStaff
+        public IActionResult AddHousekeepingStaff()
+        {
+            return View();
+        }
+
+        // POST: Admin/AddHousekeepingStaff
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddHousekeepingStaff(HousekeepingStaff model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Set default values
+                    model.IsActive = true;
+
+                    // Add to database
+                    _context.HousekeepingStaff.Add(model);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Staff member added successfully!";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error adding housekeeping staff");
+                    ModelState.AddModelError("", "Error adding staff member: " + ex.Message);
+                }
+            }
+
+            return View(model);
+        }
+
+        // GET: Admin/AssignTasks
+        public async Task<IActionResult> AssignTasks(int staffId)
+        {
+            try
+            {
+                // Get the staff member
+                var staff = await _context.HousekeepingStaff
+                    .FirstOrDefaultAsync(s => s.StaffId == staffId);
+
+                if (staff == null)
+                {
+                    TempData["ErrorMessage"] = "Staff member not found.";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+
+                // Get rooms that need cleaning
+                var roomsNeedingCleaning = await _context.Rooms
+                    .Where(r => r.Status == "Needs Cleaning")
+                    .ToListAsync();
+
+                // Get existing assignments for this staff member
+                var existingAssignments = await _context.HousekeepingAssignments
+                    .Include(a => a.Room)
+                    .Where(a => a.StaffId == staffId && a.Status != "Completed")
+                    .ToListAsync();
+
+                ViewBag.Staff = staff;
+                ViewBag.RoomsNeedingCleaning = roomsNeedingCleaning;
+                ViewBag.ExistingAssignments = existingAssignments;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AssignTasks: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while loading the task assignment page: " + ex.Message;
+                return RedirectToAction("HousekeepingDashboard");
+            }
+        }
+
+        // POST: Admin/AssignTaskToStaff
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignTaskToStaff(int staffId, int roomId, string priority, string notes)
+        {
+            try
+            {
+                // Validate that the staff exists
+                var staff = await _context.HousekeepingStaff.FindAsync(staffId);
+                if (staff == null)
+                {
+                    TempData["ErrorMessage"] = "Staff member not found.";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+
+                // Check staff's current workload
+                var currentAssignmentCount = await _context.HousekeepingAssignments
+                    .CountAsync(a => a.StaffId == staffId && a.Status != "Completed");
+
+                // Validate that the room exists and needs cleaning
+                var room = await _context.Rooms.FindAsync(roomId);
+                if (room == null)
+                {
+                    TempData["ErrorMessage"] = "Room not found.";
+                    return RedirectToAction("AssignTasks", new { staffId });
+                }
+
+                // Check if this room is already assigned to someone
+                var existingAssignment = await _context.HousekeepingAssignments
+                    .FirstOrDefaultAsync(a => a.RoomId == roomId && a.Status != "Completed");
+
+                if (existingAssignment != null)
+                {
+                    TempData["ErrorMessage"] = $"Room {room.RoomNumber} is already assigned to another staff member.";
+                    return RedirectToAction("AssignTasks", new { staffId });
+                }
+
+                // Create and save the assignment
+                var assignment = new HousekeepingAssignment
+                {
+                    StaffId = staffId,
+                    RoomId = roomId,
+                    Priority = string.IsNullOrEmpty(priority) ? "Normal" : priority,
+                    Notes = notes ?? string.Empty,
+                    Status = "Assigned",
+                    AssignedAt = DateTime.Now
+                };
+
+                _context.HousekeepingAssignments.Add(assignment);
+                await _context.SaveChangesAsync();
+
+                string message = $"Room {room.RoomNumber} has been assigned to {staff.FirstName} {staff.LastName}.";
+
+                // Add a warning if staff has multiple tasks
+                if (currentAssignmentCount >= 4) // Now has 5 or more tasks including the new one
+                {
+                    TempData["WarningMessage"] = $"Note: This staff member now has {currentAssignmentCount + 1} active tasks and may be overloaded.";
+                }
+
+                TempData["SuccessMessage"] = message;
+                return RedirectToAction("AssignTasks", new { staffId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AssignTaskToStaff: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while assigning the task: " + ex.Message;
+                return RedirectToAction("AssignTasks", new { staffId });
+            }
+        }
+
+        // POST: Admin/RemoveAssignment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveAssignment(int assignmentId, int staffId)
+        {
+            try
+            {
+                var assignment = await _context.HousekeepingAssignments
+                    .Include(a => a.Room)
+                    .FirstOrDefaultAsync(a => a.AssignmentId == assignmentId);
+
+                if (assignment == null)
+                {
+                    TempData["ErrorMessage"] = "Assignment not found.";
+                    return RedirectToAction("AssignTasks", new { staffId });
+                }
+
+                _context.HousekeepingAssignments.Remove(assignment);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Assignment for Room {assignment.Room.RoomNumber} has been removed.";
+                return RedirectToAction("AssignTasks", new { staffId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in RemoveAssignment: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while removing the assignment: " + ex.Message;
+                return RedirectToAction("AssignTasks", new { staffId });
+            }
+        }
+
+        // GET: Admin/EditHousekeepingStaff
+        public async Task<IActionResult> EditHousekeepingStaff(int id)
+        {
+            try
+            {
+                var staff = await _context.HousekeepingStaff.FindAsync(id);
+                if (staff == null)
+                {
+                    TempData["ErrorMessage"] = "Staff member not found.";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+
+                return View(staff);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching staff for edit: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while loading staff details: " + ex.Message;
+                return RedirectToAction("HousekeepingDashboard");
+            }
+        }
+
+        // POST: Admin/EditHousekeepingStaff
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditHousekeepingStaff(HousekeepingStaff staff)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingStaff = await _context.HousekeepingStaff.FindAsync(staff.StaffId);
+                    if (existingStaff == null)
+                    {
+                        TempData["ErrorMessage"] = "Staff member not found.";
+                        return RedirectToAction("HousekeepingDashboard");
+                    }
+
+                    // Update properties
+                    existingStaff.FirstName = staff.FirstName;
+                    existingStaff.LastName = staff.LastName;
+                    existingStaff.Email = staff.Email;
+                    existingStaff.PhoneNumber = staff.PhoneNumber;
+                    existingStaff.Position = staff.Position;
+                    existingStaff.IsActive = staff.IsActive;
+
+                    _context.Update(existingStaff);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Staff information updated successfully.";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating staff: " + ex.Message);
+                    ModelState.AddModelError("", "An error occurred while updating staff information: " + ex.Message);
+                }
+            }
+
+            return View(staff);
+        }
+
+        // POST: Admin/DeleteHousekeepingStaff
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteHousekeepingStaff(int id)
+        {
+            try
+            {
+                var staff = await _context.HousekeepingStaff.FindAsync(id);
+                if (staff == null)
+                {
+                    TempData["ErrorMessage"] = "Staff member not found.";
+                    return RedirectToAction("HousekeepingDashboard");
+                }
+
+                // Check if staff has active assignments
+                var activeAssignments = await _context.HousekeepingAssignments
+                    .Where(a => a.StaffId == id && a.Status != "Completed")
+                    .CountAsync();
+
+                if (activeAssignments > 0)
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete staff member with {activeAssignments} active assignments. Reassign or complete these tasks first.";
+                    return RedirectToAction("EditHousekeepingStaff", new { id });
+                }
+
+                // Delete the staff member
+                _context.HousekeepingStaff.Remove(staff);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Staff member deleted successfully.";
+                return RedirectToAction("HousekeepingDashboard");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting staff: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while deleting staff member: " + ex.Message;
+                return RedirectToAction("EditHousekeepingStaff", new { id });
+            }
+        }
+
         private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkInDate, DateTime checkOutDate)
         {
             int totalDays = (checkOutDate - checkInDate).Days;

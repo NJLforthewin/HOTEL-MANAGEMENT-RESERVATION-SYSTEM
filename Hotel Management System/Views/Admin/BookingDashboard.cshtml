@@ -1,0 +1,292 @@
+﻿@{
+    ViewData["Title"] = "Booking Management";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<div class="container-fluid p-0">
+    <div class="room-tabs mb-4">
+        <ul class="nav nav-tabs border-bottom-0">
+            <li class="nav-item">
+                <a class="nav-link active" id="pending-tab" href="#pending" data-bs-toggle="tab">
+                    <i class="fas fa-clock me-2"></i>Pending Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="confirmed-tab" href="#confirmed" data-bs-toggle="tab">
+                    <i class="fas fa-check-circle me-2"></i>Confirmed Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="booked-tab" href="#booked" data-bs-toggle="tab">
+                    <i class="fas fa-bed me-2"></i>Booked Rooms
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="reserved-tab" href="#reserved" data-bs-toggle="tab">
+                    <i class="fas fa-bookmark me-2"></i>Reserved Rooms
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="pending">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0 text-burgundy">Pending Bookings</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Guest Name</th>
+                                    <th>Room</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Booking Type</th>
+                                    <th>Payment Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.PendingBookings != null && ViewBag.PendingBookings.Count > 0)
+                                {
+                                    @foreach (var booking in ViewBag.PendingBookings)
+                                    {
+                                        <tr>
+                                            <td>@booking.GuestName</td>
+                                            <td>@(booking.Room != null ? $"{booking.Room.Category} {booking.Room.RoomNumber}" : "Not assigned")</td>
+                                            <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.BookingType</td>
+                                            <td>@booking.PaymentMethod</td>
+                                            <td>
+                                                <form method="post" class="d-inline">
+                                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                                    <button type="submit" formaction="@Url.Action("ConfirmBooking", "Admin")" class="btn btn-sm btn-success">Confirm</button>
+                                                    <button type="submit" formaction="@Url.Action("CancelBooking", "Admin")" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">No pending bookings found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="confirmed">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0 text-burgundy">Confirmed Bookings</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Guest Name</th>
+                                    <th>Room</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Booking Type</th>
+                                    <th>Payment Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.ConfirmedBookings != null && ViewBag.ConfirmedBookings.Count > 0)
+                                {
+                                    @foreach (var booking in ViewBag.ConfirmedBookings)
+                                    {
+                                        <tr>
+                                            <td>@booking.GuestName</td>
+                                            <td>@(booking.Room != null ? $"{booking.Room.Category} {booking.Room.RoomNumber}" : "Not assigned")</td>
+                                            <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.BookingType</td>
+                                            <td>
+                                                @if (booking.PaymentStatus == "Paid")
+                                                {
+                                                    <span class="badge bg-success">Paid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">@booking.PaymentStatus</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <form method="post" class="d-inline">
+                                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                                    @if (booking.PaymentStatus != "Paid")
+                                                    {
+                                                        <button type="submit" formaction="@Url.Action("ConfirmPayment", "Admin")" class="btn btn-sm btn-success">Mark Paid</button>
+                                                    }
+                                                    <button type="submit" formaction="@Url.Action("ConfirmCheckIn", "Admin")" class="btn btn-sm btn-primary">Check-In</button>
+                                                    <button type="submit" formaction="@Url.Action("CancelBooking", "Admin")" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">No confirmed bookings found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booked Rooms Tab -->
+        <div class="tab-pane fade" id="booked">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0 text-burgun  dy">Booked Rooms</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Capacity</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.BookedRooms != null && ViewBag.BookedRooms.Count > 0)
+                                {
+                                    @foreach (var room in ViewBag.BookedRooms)
+                                    {
+                                        <tr>
+                                            <td>@room.RoomNumber</td>
+                                            <td>@room.Category</td>
+                                            <td class="text-burgundy fw-bold">$@room.PricePerNight.ToString("0.00")</td>
+                                            <td>@room.Capacity guests</td>
+                                            <td>
+                                                <span class="badge bg-danger">@room.Status</span>
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("RoomDetails", "Admin", new { id = room.RoomId })" class="btn btn-sm btn-outline-burgundy">
+                                                    <i class="fas fa-info-circle"></i> Details
+                                                </a>
+                                                <a href="@Url.Action("CheckoutRoom", "Admin", new { roomId = room.RoomId })" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-sign-out-alt"></i> Checkout
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">No booked rooms found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reserved Rooms Tab -->
+        <div class="tab-pane fade" id="reserved">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0 text-burgundy">Reserved Rooms</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Capacity</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.ReservedRooms != null && ViewBag.ReservedRooms.Count > 0)
+                                {
+                                    @foreach (var room in ViewBag.ReservedRooms)
+                                    {
+                                        <tr>
+                                            <td>@room.RoomNumber</td>
+                                            <td>@room.Category</td>
+                                            <td class="text-burgundy fw-bold">$@room.PricePerNight.ToString("0.00")</td>
+                                            <td>@room.Capacity guests</td>
+                                            <td>
+                                                <span class="badge bg-primary">Reserved</span>
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("RoomDetails", "Admin", new { id = room.RoomId })" class="btn btn-sm btn-outline-burgundy">
+                                                    <i class="fas fa-info-circle"></i> Details
+                                                </a>
+                                                <a href="@Url.Action("CheckIn", "Admin", new { roomId = room.RoomId })" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check-circle"></i> Check In
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">No reserved rooms found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize cleaning performance chart
+            if (document.getElementById('cleaningPerformanceChart')) {
+                initCleaningPerformanceChart();
+            }
+
+            // Show appropriate tab based on URL hash
+            var hash = window.location.hash;
+            if (hash) {
+                $('.nav-tabs a[href="' + hash + '"]').tab('show');
+            }
+
+            // Update URL hash when tab changes
+            $('.nav-tabs a').on('shown.bs.tab', function(e) {
+                if (history.pushState) {
+                    history.pushState(null, null, e.target.hash);
+                } else {
+                    window.location.hash = e.target.hash;
+                }
+            });
+        });
+    </script>
+}

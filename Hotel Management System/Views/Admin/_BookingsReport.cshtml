@@ -1,0 +1,126 @@
+﻿<div class="report-container bookings-report">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">Total Bookings</h6>
+                    <h2 class="mb-0">@ViewBag.TotalBookings</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Average Stay Duration</h6>
+                    <h2 class="mb-0">@ViewBag.AvgStayDuration days</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Most Popular Day</h6>
+                    <h2 class="mb-0">
+                        @{
+                            var popularDay = "N/A";
+                            if (ViewBag.BookingsByDay != null)
+                            {
+                                var maxCount = 0;
+                                foreach (dynamic day in ViewBag.BookingsByDay)
+                                {
+                                    if (day.Count > maxCount)
+                                    {
+                                        popularDay = day.Day;
+                                        maxCount = day.Count;
+                                    }
+                                }
+                            }
+                        }
+                        @popularDay
+                    </h2>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Bookings by Status</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingStatusChart" data-chart-data="@Html.Raw(Json.Serialize(ViewBag.BookingsByStatus ?? new List<object>()))" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Bookings by Payment Status</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingPaymentChart" data-chart-data="@Html.Raw(Json.Serialize(ViewBag.BookingsByPayment ?? new List<object>()))" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Bookings by Day of Week</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingDayChart" data-chart-data="@Html.Raw(Json.Serialize(ViewBag.BookingsByDay ?? new List<object>()))" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.BookingsByStatus != null)
+                            {
+                                foreach (var item in ViewBag.BookingsByStatus)
+                                {
+                                    <tr>
+                                        <td>@item.Status</td>
+                                        <td>@item.Count</td>
+                                        <td>@item.Percentage%</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Booking Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingTrendChart" data-chart-data="@Html.Raw(Json.Serialize(ViewBag.BookingTrend ?? new List<object>()))" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,220 @@
+﻿@model Hotel_Management_System.Models.Room
+
+@{
+    ViewData["Title"] = $"{Model.Category} Room - Details";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<div class="container mt-4">
+    <div class="room-details-page">
+        <!-- Room Header -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="room-header-img" style="background-image: url('/images/@(Model.Category.ToLower()).jpg')">
+                    <div class="room-header-overlay">
+                        <h1 class="room-title">@Model.Category Room</h1>
+                        <p class="room-subtitle">Room @Model.RoomNumber</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Room Information -->
+            <div class="col-lg-8">
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="section-heading">Room Details</h2>
+                        <p class="room-description">Experience luxury and comfort in our @Model.Category room. This spacious accommodation features modern amenities and elegant décor to ensure a pleasant stay.</p>
+
+                        <!-- Room Features -->
+                        <div class="room-features">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="feature">
+                                        <i class="fas fa-bed"></i>
+                                        <span>Luxury King Bed</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature">
+                                        <i class="fas fa-bath"></i>
+                                        <span>Private Bathroom</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature">
+                                        <i class="fas fa-wifi"></i>
+                                        <span>Free High-Speed WiFi</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature">
+                                        <i class="fas fa-user-friends"></i>
+                                        <span>Maximum @Model.Capacity Guests</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Room Amenities -->
+                        <h3 class="amenities-heading">Amenities</h3>
+                        <div class="amenities">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <ul class="amenities-list">
+                                        <li><i class="fas fa-tv"></i> Flat-screen TV</li>
+                                        <li><i class="fas fa-snowflake"></i> Air conditioning</li>
+                                        <li><i class="fas fa-coffee"></i> Coffee maker</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="amenities-list">
+                                        <li><i class="fas fa-phone"></i> Telephone</li>
+                                        <li><i class="fas fa-utensils"></i> Mini-fridge</li>
+                                        <li><i class="fas fa-lock"></i> In-room safe</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="amenities-list">
+                                        <li><i class="fas fa-concierge-bell"></i> Room service</li>
+                                        <li><i class="fas fa-dumbbell"></i> Fitness center access</li>
+                                        <li><i class="fas fa-swimming-pool"></i> Pool access</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Policies -->
+                        <h3 class="policies-heading">Policies</h3>
+                        <div class="policies">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="policy">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <span class="policy-name">Check-in</span>
+                                            <span class="policy-detail">After 2:00 PM</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="policy">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <span class="policy-name">Check-out</span>
+                                            <span class="policy-detail">Before 12:00 PM</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="policy">
+                                        <i class="fas fa-smoking-ban"></i>
+                                        <div>
+                                            <span class="policy-name">Smoking</span>
+                                            <span class="policy-detail">Not allowed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="policy">
+                                        <i class="fas fa-paw"></i>
+                                        <div>
+                                            <span class="policy-name">Pets</span>
+                                            <span class="policy-detail">Not allowed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Booking Information -->
+            <div class="col-lg-4">
+                <div class="card booking-card border-0 shadow">
+                    <div class="card-header">
+                        <h3>Room Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Status Badge -->
+                        <div class="status-badge-container mb-3">
+                            @if (Model.Status == "Available")
+                            {
+                                <div class="status-badge available">
+                                    <i class="fas fa-check-circle"></i> Available
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="status-badge unavailable">
+                                    <i class="fas fa-times-circle"></i> Not Available
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Price -->
+                        <div class="price-container mb-4 text-center">
+                            <span class="price">$@Model.PricePerNight</span>
+                            <span class="per-night">per night</span>
+                            <div class="taxes">includes taxes and fees</div>
+                        </div>
+
+                        <!-- Capacity -->
+                        <div class="capacity-container mb-4">
+                            <div class="room-capacity">
+                                <i class="fas fa-user-friends"></i>
+                                <span>Maximum @Model.Capacity Guests</span>
+                            </div>
+                        </div>
+
+                        <!-- Booking Form -->
+                        <div class="booking-form mb-4">
+                            <form>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <label for="check-in">Check-in</label>
+                                        <input type="date" id="check-in" class="form-control" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="check-out">Check-out</label>
+                                        <input type="date" id="check-out" class="form-control" required>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Booking Buttons -->
+                        <div class="booking-options">
+                            @if (Model.Status == "Available")
+                            {
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    <a href="@Url.Action("Create", "Booking", new { roomId = Model.RoomId })" class="btn btn-book-now w-100 mb-3">Book Now</a>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Create", "Booking", new { roomId = Model.RoomId }) })" class="btn btn-book-now w-100 mb-3">Login to Book</a>
+                                }
+                            }
+                            else
+                            {
+                                <button class="btn btn-unavailable w-100 mb-3" disabled>Not Available</button>
+                            }
+
+                            <a href="@Url.Action("Index", "Home")" class="btn btn-back w-100">View All Rooms</a>
+                        </div>
+
+                        <!-- Cancellation Policy -->
+                        <div class="cancellation-policy mt-4">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Free cancellation up to 24 hours before check-in</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

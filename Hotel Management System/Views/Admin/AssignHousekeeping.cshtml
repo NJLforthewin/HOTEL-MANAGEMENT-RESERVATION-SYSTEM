@@ -1,0 +1,146 @@
+﻿@model Hotel_Management_System.Models.Room
+
+@{
+    ViewData["Title"] = "Assign Housekeeping";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+    var housekeepingStaff = ViewBag.HousekeepingStaff as List<Hotel_Management_System.Models.User>;
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Assign Housekeeping Staff</h1>
+        <a href="@Url.Action("ManageHousekeeping", "Admin")" class="d-none d-sm-inline-block btn btn-sm btn-outline-primary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-primary-50 me-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Room Details Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Room Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Room @Model.RoomNumber</h5>
+                        <p class="text-gray-600 mb-0">@(Model.Category ?? "Standard") Room</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="font-weight-bold">Status:</div>
+                            <div class="ms-2">
+                                @if (string.IsNullOrEmpty(Model.Status) || Model.Status == "Available")
+                                {
+                                    <span class="badge bg-success">Available</span>
+                                }
+                                else if (Model.Status == "Occupied" || Model.Status == "Booked")
+                                {
+                                    <span class="badge bg-danger">@Model.Status</span>
+                                }
+                                else if (Model.Status == "Needs Cleaning")
+                                {
+                                    <span class="badge bg-warning text-dark">Needs Cleaning</span>
+                                }
+                                else if (Model.Status == "Maintenance")
+                                {
+                                    <span class="badge bg-secondary">Maintenance</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">@Model.Status</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="font-weight-bold mb-2">Last Cleaned:</div>
+                        <div class="text-gray-800">
+                            @if (Model.LastCleaned.HasValue)
+                            {
+                                <span>@Model.LastCleaned.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-500">Not recorded</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.MaintenanceNotes))
+                    {
+                        <div class="mb-3">
+                            <div class="font-weight-bold mb-2">Notes:</div>
+                            <div class="p-3 bg-light text-gray-800 rounded">
+                                <p class="mb-0">@Model.MaintenanceNotes</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Staff Card -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Assign Staff</h6>
+                </div>
+                <div class="card-body">
+                    @if (housekeepingStaff != null && housekeepingStaff.Count > 0)
+                    {
+                        <form method="post" action="@Url.Action("AssignHousekeepingStaff", "Admin")">
+                            <input type="hidden" name="roomId" value="@Model.RoomId" />
+
+                            <div class="mb-3">
+                                <label for="staffId" class="form-label text-gray-800">Select Staff Member</label>
+                                <select name="staffId" id="staffId" class="form-control" required>
+                                    <option value="">Select a staff member...</option>
+                                    @foreach (var staff in housekeepingStaff)
+                                    {
+                                        <option value="@staff.UserId">@staff.FirstName @staff.LastName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="priority" class="form-label text-gray-800">Priority</label>
+                                <select name="priority" id="priority" class="form-control">
+                                    <option value="Normal">Normal</option>
+                                    <option value="High">High</option>
+                                    <option value="Urgent">Urgent</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label text-gray-800">Additional Notes</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Specific cleaning instructions or requirements..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-check me-2"></i>Assign Staff
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-slash fa-4x mb-3 text-gray-300"></i>
+                            <p class="text-gray-500 mb-3">No housekeeping staff available.</p>
+                            <a href="@Url.Action("AddUser", "Admin")" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Add Staff
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/housekeeping.js"></script>
+}
