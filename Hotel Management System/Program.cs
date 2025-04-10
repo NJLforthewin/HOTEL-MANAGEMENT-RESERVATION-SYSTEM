@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Hotel_Management_System.Models;
+using Hotel_Management_System.Services;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,15 @@ builder.Services.AddAuthorization();
 // Add session support
 builder.Services.AddSession();
 builder.Services.AddSingleton<ITempDataProvider, SessionStateTempDataProvider>();
+
+// Register HttpClient
+builder.Services.AddHttpClient();
+
+// Register PaymongoService
+builder.Services.AddScoped<PaymongoService>();
+
+// Register EmailService
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddLogging(loggingBuilder =>
 {

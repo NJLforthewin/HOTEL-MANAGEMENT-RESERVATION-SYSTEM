@@ -57,7 +57,12 @@
                                         break;
                                 }
 
-                                var assignedStaff = ViewBag.StaffMembers[room.RoomId % ViewBag.StaffMembers.Count];
+                                // Get the assigned staff for this room
+                                string assignedStaff = "Not Assigned";
+                                if (ViewBag.RoomAssignments.ContainsKey(room.RoomId))
+                                {
+                                    assignedStaff = ViewBag.RoomAssignments[room.RoomId];
+                                }
 
                                 <tr class="room-row @statusClass">
                                     <td><strong>@room.RoomNumber</strong></td>
@@ -122,9 +127,9 @@
                         <label for="staffSelect" class="form-label">Staff Member</label>
                         <select class="form-select" id="staffSelect" required>
                             <option value="" selected disabled>Select staff member</option>
-                            @foreach (var staff in ViewBag.StaffMembers)
+                            @foreach (var staff in ViewBag.StaffList)
                             {
-                                <option value="@staff">@staff</option>
+                                <option value="@staff.StaffId">@staff.FullName</option>
                             }
                         </select>
                     </div>
@@ -178,9 +183,9 @@
                         <label for="newStaffSelect" class="form-label">New Staff Assignment</label>
                         <select class="form-select" id="newStaffSelect" required>
                             <option value="" selected disabled>Select staff member</option>
-                            @foreach (var staff in ViewBag.StaffMembers)
+                            @foreach (var staff in ViewBag.StaffList)
                             {
-                                <option value="@staff">@staff</option>
+                                <option value="@staff.StaffId">@staff.FullName</option>
                             }
                         </select>
                     </div>

@@ -1,0 +1,129 @@
+﻿/* Payment Page Styles */
+.payment-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+    .payment-header h2 {
+        color: #800020;
+        margin-bottom: 5px;
+    }
+
+.payment-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding: 20px;
+}
+
+.payment-amount {
+    background-color: rgba(128, 0, 32, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+    .payment-amount h3 {
+        margin: 0;
+        color: #666;
+        font-size: 1rem;
+    }
+
+.amount-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #800020;
+    margin-top: 10px;
+}
+
+.payment-form {
+    padding: 10px;
+}
+
+.payment-message {
+    color: #495057;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 10px 0;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success and Failed Pages */
+.success-container,
+.failed-container {
+    max-width: 600px;
+    margin: 60px auto;
+    text-align: center;
+}
+
+.success-card,
+.failed-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    padding: 40px 20px;
+}
+
+.success-icon {
+    font-size: 5rem;
+    color: #28a745;
+    margin-bottom: 20px;
+}
+
+.failed-icon {
+    font-size: 5rem;
+    color: #dc3545;
+    margin-bottom: 20px;
+}
+
+.success-details,
+.failed-details {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.success-actions,
+.failed-actions {
+    margin-top: 30px;
+}
+
+    .failed-actions .btn {
+        margin: 0 5px;
+    }
+

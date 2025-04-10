@@ -146,6 +146,108 @@ namespace Hotel_Management_System.Controllers
             return RedirectToAction("UserList");
         }
 
+        public async Task<IActionResult> CreateBooking()
+        {
+            try
+            {
+                // Get available rooms
+                var availableRooms = await _context.Rooms
+                    .Where(r => r.Status == "Available")
+                    .Select(r => new { r.RoomId, r.RoomNumber, r.Category, r.PricePerNight }) // Use PricePerNight
+                    .ToListAsync();
+
+                // Get payment methods
+                var paymentMethods = new List<string> { "Cash", "Credit Card", "Debit Card", "Bank Transfer" };
+
+                // Set default dates
+                ViewBag.CheckinDate = DateTime.Now.ToString("yyyy-MM-dd");
+                ViewBag.CheckoutDate = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
+                ViewBag.AvailableRooms = availableRooms;
+                ViewBag.PaymentMethods = paymentMethods;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading admin booking page");
+                TempData["ErrorMessage"] = "An error occurred while loading the booking page: " + ex.Message;
+                return RedirectToAction("Index", "Admin");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateBooking(Booking booking)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    // Set defaults for new booking
+                    booking.CreatedAt = DateTime.Now; // Using CreatedAt instead of BookingDate
+                    booking.Status = "Confirmed";
+                    // No CreatedBy field in the model - removed that line
+
+                    // Get room details
+                    var room = await _context.Rooms.FindAsync(booking.RoomId);
+                    if (room == null)
+                    {
+                        ModelState.AddModelError("RoomId", "Selected room not found");
+                        return View(booking);
+                    }
+
+                    // Calculate total price if not set
+                    if (booking.TotalPrice <= 0)
+                    {
+                        var nights = (booking.CheckOutDate - booking.CheckInDate).Days; // Use CheckInDate/CheckOutDate
+                        booking.TotalPrice = room.PricePerNight * nights; // Use PricePerNight
+                    }
+
+                    // Update room status
+                    room.Status = "Occupied";
+                    _context.Rooms.Update(room);
+
+                    // Add booking
+                    _context.Bookings.Add(booking);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Booking created successfully.";
+                    return RedirectToAction("Bookings", "Admin");
+                }
+
+                // If we got this far, something failed, redisplay form
+                var availableRooms = await _context.Rooms
+                    .Where(r => r.Status == "Available" || r.RoomId == booking.RoomId)
+                    .Select(r => new { r.RoomId, r.RoomNumber, r.Category, r.PricePerNight }) // Use PricePerNight
+                    .ToListAsync();
+
+                var paymentMethods = new List<string> { "Cash", "Credit Card", "Debit Card", "Bank Transfer" };
+
+                ViewBag.AvailableRooms = availableRooms;
+                ViewBag.PaymentMethods = paymentMethods;
+
+                return View(booking);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating booking");
+                TempData["ErrorMessage"] = "An error occurred while creating the booking: " + ex.Message;
+
+                // Repopulate necessary data
+                var availableRooms = await _context.Rooms
+                    .Where(r => r.Status == "Available" || r.RoomId == booking.RoomId)
+                    .Select(r => new { r.RoomId, r.RoomNumber, r.Category, r.PricePerNight }) // Use PricePerNight
+                    .ToListAsync();
+
+                var paymentMethods = new List<string> { "Cash", "Credit Card", "Debit Card", "Bank Transfer" };
+
+                ViewBag.AvailableRooms = availableRooms;
+                ViewBag.PaymentMethods = paymentMethods;
+
+                return View(booking);
+            }
+        }
+
         public IActionResult CreateUser()
         {
             return View();
@@ -1615,6 +1717,8 @@ namespace Hotel_Management_System.Controllers
                 return RedirectToAction("EditHousekeepingStaff", new { id });
             }
         }
+
+
 
         private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkInDate, DateTime checkOutDate)
         {

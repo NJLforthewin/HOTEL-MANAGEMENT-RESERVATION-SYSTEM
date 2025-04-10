@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Payment Successful";
+}
+
+<link rel="stylesheet" href="~/css/payment-success.css" />
+
+<div class="payment-success-container">
+    <div class="success-card">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h1>Payment Successful</h1>
+
+        <div class="success-message">
+            <p>Your booking has been confirmed and payment has been processed successfully.</p>
+
+            @if (TempData["EmailSent"] != null)
+            {
+                <div class="email-notification">
+                    <i class="fas fa-envelope"></i>
+                    <p>A confirmation email has been sent to your email address.</p>
+                </div>
+            }
+
+            @if (TempData["BookingReference"] != null)
+            {
+                <div class="booking-reference">
+                    <h3>Your booking reference:</h3>
+                    <div class="reference-number">@TempData["BookingReference"]</div>
+                </div>
+            }
+        </div>
+
+        <div class="booking-details-note">
+            <p>Please keep your booking reference for future inquiries.</p>
+            <p>If you have any questions, please contact our customer service.</p>
+        </div>
+
+        <div class="success-actions">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                <i class="fas fa-home"></i> Return to Home
+            </a>
+        </div>
+    </div>
+</div>

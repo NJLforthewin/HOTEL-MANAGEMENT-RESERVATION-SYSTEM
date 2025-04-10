@@ -3,99 +3,197 @@
 @{
     ViewData["Title"] = "Create Booking";
 }
+<link rel="stylesheet" href="~/css/create.css" />
 
-<h2>Create Booking</h2>
+<div class="container booking-container">
+    <h2 class="booking-title">Create Booking</h2>
+    <p class="booking-subtitle">Fill in the details to make a new booking</p>
+    <hr class="booking-divider" />
 
-<div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All" class="text-danger validation-summary"></div>
 
-<form asp-action="Create" asp-controller="Booking" method="post">
-    @Html.AntiForgeryToken()
+    <form asp-action="InitiatePayment" asp-controller="Booking" method="post" class="booking-form">
+        @Html.AntiForgeryToken()
 
-    <div class="form-group">
-        <label asp-for="GuestName" class="control-label">Guest Name</label>
-        <input asp-for="GuestName" class="form-control" required />
-        <span asp-validation-for="GuestName" class="text-danger"></span>
-    </div>
+        <!-- Guest Information Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4>Guest Information</h4>
+            </div>
+            <div class="section-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="GuestName" class="control-label">Guest Name</label>
+                            <input asp-for="GuestName" class="form-control" required />
+                            <span asp-validation-for="GuestName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Email" class="control-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="PhoneNumber" class="control-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control" type="tel" required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="Email" class="control-label">Email</label>
-        <input asp-for="Email" class="form-control" type="email" required />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
+        <!-- Stay Details Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4>Stay Details</h4>
+            </div>
+            <div class="section-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="RoomId" class="control-label">Room</label>
+                            <select asp-for="RoomId" class="form-control" required>
+                                <option value="">-- Select a Room --</option>
+                                @foreach (var room in ViewBag.Rooms)
+                                {
+                                    if (ViewBag.SelectedRoomId != null && ViewBag.SelectedRoomId == room.RoomId)
+                                    {
+                                        <option value="@room.RoomId" data-price="@room.PricePerNight" selected>@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@room.RoomId" data-price="@room.PricePerNight">@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="RoomId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="CheckInDate" class="control-label">Check-In Date</label>
+                            <input asp-for="CheckInDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="CheckOutDate" class="control-label">Check-Out Date</label>
+                            <input asp-for="CheckOutDate" class="form-control" type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
+                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label asp-for="PhoneNumber" class="control-label">Phone Number</label>
-        <input asp-for="PhoneNumber" class="form-control" type="tel" required />
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-    </div>
+                <div class="booking-type-section">
+                    <label asp-for="BookingType" class="control-label">Booking Type</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="booking-type-option p-3" onclick="selectBookingType('Booking')">
+                                <input class="form-check-input" type="radio" asp-for="BookingType" id="bookingOption" value="Booking" checked>
+                                <label class="form-check-label d-block" for="bookingOption">
+                                    <strong>Booking</strong>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Confirmed with payment. Higher priority and guaranteed room availability.
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="booking-type-option p-3" onclick="selectBookingType('Reservation')">
+                                <input class="form-check-input" type="radio" asp-for="BookingType" id="reservationOption" value="Reservation">
+                                <label class="form-check-label d-block" for="reservationOption">
+                                    <strong>Reservation</strong>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Temporary hold without guaranteed payment. Subject to availability.
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <span asp-validation-for="BookingType" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="RoomId" class="control-label">Room</label>
-        <select asp-for="RoomId" class="form-control" required>
-            <option value="">-- Select a Room --</option>
-            @foreach (var room in ViewBag.Rooms)
-            {
-                if (ViewBag.SelectedRoomId != null && ViewBag.SelectedRoomId == room.RoomId)
-                {
-                    <option value="@room.RoomId" data-price="@room.PricePerNight" selected>@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
-                }
-                else
-                {
-                    <option value="@room.RoomId" data-price="@room.PricePerNight">@room.RoomNumber - @room.Category ($@room.PricePerNight/night)</option>
-                }
-            }
-        </select>
-        <span asp-validation-for="RoomId" class="text-danger"></span>
-    </div>
+        <!-- Payment Information Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4>Payment Information</h4>
+            </div>
+            <div class="section-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Price Per Night</label>
+                            <input type="text" class="form-control" id="PricePerNight" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="TotalPrice" class="control-label">Total Price</label>
+                            <input asp-for="TotalPrice" class="form-control" id="TotalPrice" readonly />
+                        </div>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label asp-for="CheckInDate" class="control-label">Check-In Date</label>
-        <input asp-for="CheckInDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
-        <span asp-validation-for="CheckInDate" class="text-danger"></span>
-    </div>
+                <div class="payment-method-section">
+                    <label>Select Payment Method</label>
+                    <div class="payment-methods">
+                        <div class="payment-method-item">
+                            <input type="radio" id="method-card" name="paymentMethod" value="card" checked>
+                            <label for="method-card">
+                                <div class="payment-icon">
+                                    <i class="far fa-credit-card"></i>
+                                </div>
+                                <span>Credit Card</span>
+                            </label>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="CheckOutDate" class="control-label">Check-Out Date</label>
-        <input asp-for="CheckOutDate" class="form-control" type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
-        <span asp-validation-for="CheckOutDate" class="text-danger"></span>
-    </div>
+                        <div class="payment-method-item">
+                            <input type="radio" id="method-gcash" name="paymentMethod" value="gcash">
+                            <label for="method-gcash">
+                                <div class="payment-icon gcash-icon">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <span>GCash</span>
+                            </label>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="BookingType" class="control-label">Booking Type</label>
-        <select asp-for="BookingType" class="form-control" required>
-            <option value="Booking">Booking</option>
-            <option value="Reservation">Reservation</option>
-        </select>
-        <span asp-validation-for="BookingType" class="text-danger"></span>
-    </div>
+                        <div class="payment-method-item">
+                            <input type="radio" id="method-bank_transfer" name="paymentMethod" value="bank_transfer">
+                            <label for="method-bank_transfer">
+                                <div class="payment-icon bank-transfer-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <span>Bank Transfer</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label>Price Per Night</label>
-        <input type="text" class="form-control" id="PricePerNight" readonly />
-    </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-credit-card me-1"></i> Proceed with Payment
+            </button>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
 
-    <div class="form-group">
-        <label asp-for="TotalPrice" class="control-label">Total Price</label>
-        <input asp-for="TotalPrice" class="form-control" id="TotalPrice" readonly />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="PaymentMethod" class="control-label">Payment Method</label>
-        <select asp-for="PaymentMethod" class="form-control" required>
-            <option value="">-- Select a Payment Method --</option>
-            <option value="Credit/Debit Card">Credit/Debit Card</option>
-            <option value="Online Wallet">Online Wallet</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Cancel</a>
-    </div>
-
-</form>
+<!-- Hidden JSON data for room prices -->
+<script id="RoomPricesData" type="application/json">
+    @Html.Raw(Json.Serialize(ViewBag.RoomPrices))
+</script>
 
 <!-- Hidden JSON data for room prices -->
 <script id="RoomPricesData" type="application/json">
@@ -158,7 +256,8 @@
                     return false;
                 }
 
-                if (!$("#PaymentMethod").val()) {
+                // Check if a payment method is selected (using the new payment UI)
+                if (!$("input[name='paymentMethod']:checked").val()) {
                     e.preventDefault();
                     alert("Please select a payment method");
                     return false;
@@ -177,6 +276,54 @@
 
                 return true;
             });
+
+            // Payment method selection
+            $(".payment-method-item label").click(function() {
+                // Handle radio selection
+                $(".payment-methods input[type='radio']").prop("checked", false);
+                $(this).siblings("input[type='radio']").prop("checked", true);
+            });
+        });
+
+        // Function to select booking type
+        function selectBookingType(type) {
+            console.log("Selecting booking type: " + type);
+
+            // Update radio selection
+            $("input[name='BookingType']").prop("checked", false);
+            $(`input[value='${type}']`).prop("checked", true);
+
+            // Update visual state
+            $(".booking-type-option").removeClass("selected");
+            $(`input[value='${type}']`).closest(".booking-type-option").addClass("selected");
+        }
+
+        // Initialize booking types when DOM is ready
+        $(document).ready(function() {
+            console.log("Initializing booking type selector");
+
+            // Force select the initial option (default to Booking)
+            const initialValue = $("input[name='BookingType']:checked").val() || "Booking";
+            console.log("Initial value: " + initialValue);
+
+            // Apply styles immediately
+            $(".booking-type-option").removeClass("selected");
+            $(`input[value='${initialValue}']`).closest(".booking-type-option").addClass("selected");
+
+            // Add click handler for the option containers
+            $(".booking-type-option").on("click", function(e) {
+                const type = $(this).find("input[type='radio']").val();
+                console.log("Clicked option: " + type);
+                selectBookingType(type);
+            });
+
+            // For testing - force apply selected class (can be removed later)
+            setTimeout(function() {
+                const currentValue = $("input[name='BookingType']:checked").val();
+                console.log("Re-applying selected class to: " + currentValue);
+                $(".booking-type-option").removeClass("selected");
+                $(`input[value='${currentValue}']`).closest(".booking-type-option").addClass("selected");
+            }, 500);
         });
     </script>
 }

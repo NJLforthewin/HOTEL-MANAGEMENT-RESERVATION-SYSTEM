@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Payment Failed";
+}
+
+<link rel="stylesheet" href="~/css/payment.css" />
+
+<div class="container failed-container">
+    <div class="failed-card">
+        <div class="failed-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+
+        <h2>Payment Failed</h2>
+        <p>We're sorry, but there was an issue processing your payment.</p>
+
+        <div class="failed-details">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            <p>Please check your payment details and try again.</p>
+        </div>
+
+        <div class="failed-actions">
+            <a href="@Url.Action("Create", "Booking")" class="btn btn-primary">Try Again</a>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Return to Home</a>
+        </div>
+    </div>
+</div>

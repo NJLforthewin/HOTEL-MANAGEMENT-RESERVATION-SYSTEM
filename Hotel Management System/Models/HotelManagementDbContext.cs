@@ -7,7 +7,7 @@ namespace Hotel_Management_System.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Room> Rooms { get; set; }
-
+        public DbSet<InventoryItem> InventoryItems { get; set; }
         public DbSet<HousekeepingStaff> HousekeepingStaff { get; set; }
         public DbSet<HousekeepingAssignment> HousekeepingAssignments { get; set; }
 

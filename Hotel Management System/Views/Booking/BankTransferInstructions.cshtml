@@ -1,0 +1,95 @@
+﻿@{
+    ViewData["Title"] = "Bank Transfer Instructions";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-burgundy text-white">
+                    <h3 class="mb-0">Bank Transfer Instructions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success mb-4">
+                        <i class="fas fa-check-circle"></i> Your booking (Reference #@ViewBag.BookingReference) has been created successfully!
+                    </div>
+
+                    <h4 class="mb-3">Please complete your payment via bank transfer:</h4>
+
+                    <div class="bank-details p-4 bg-light rounded mb-4">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Bank Name:</th>
+                                <td>Metrobank</td>
+                            </tr>
+                            <tr>
+                                <th>Account Name:</th>
+                                <td>Nuxus Hotel</td>
+                            </tr>
+                            <tr>
+                                <th>Account Number:</th>
+                                <td>1234-5678-9012-3456</td>
+                            </tr>
+                            <tr>
+                                <th>Amount:</th>
+                                <td>₱@string.Format("{0:N2}", ViewBag.Amount)</td>
+                            </tr>
+                            <tr>
+                                <th>Reference:</th>
+                                <td>Booking #@ViewBag.BookingReference</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="important-notes mb-4 border p-3 bg-light-yellow">
+                        <h5><i class="fas fa-exclamation-circle text-warning"></i> Important Notes:</h5>
+                        <ul>
+                            <li>Please complete your payment within 24 hours to confirm your booking.</li>
+                            <li>Include the booking reference number in your payment description.</li>
+                            <li>After making the payment, please send the receipt to <a href="mailto:info@nuxushotel.com">info@nuxushotel.com</a>.</li>
+                        </ul>
+                    </div>
+
+                    @if (ViewBag.EmailSent == "true")
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-envelope"></i> An email with these instructions has been sent to your email address.
+                        </div>
+                    }
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-burgundy">Return to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-burgundy {
+        background-color: #800020;
+    }
+
+    .text-burgundy {
+        color: #800020;
+    }
+
+    .btn-outline-burgundy {
+        color: #800020;
+        border-color: #800020;
+    }
+
+        .btn-outline-burgundy:hover {
+            background-color: #800020;
+            color: white;
+        }
+
+    .bank-details {
+        border-left: 4px solid #800020;
+    }
+
+    .bg-light-yellow {
+        background-color: #fffdf5;
+    }
+</style>

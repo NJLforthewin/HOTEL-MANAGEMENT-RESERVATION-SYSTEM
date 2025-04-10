@@ -30,12 +30,18 @@
                 <a asp-controller="Housekeeping" asp-action="RoomAssignments"
                    class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "RoomAssignments" ? "active" : "")">
                     <i class="fas fa-clipboard-list"></i> Room Assignments
-                    <span class="badge bg-warning rounded-pill ms-auto">3</span>
+                    @if (ViewBag.PendingRoomAssignments > 0)
+                    {
+                        <span class="badge bg-warning rounded-pill ms-auto">@ViewBag.PendingRoomAssignments</span>
+                    }
                 </a>
                 <a asp-controller="Housekeeping" asp-action="MaintenanceRequests"
                    class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "MaintenanceRequests" ? "active" : "")">
                     <i class="fas fa-tools"></i> Maintenance Requests
-                    <span class="badge bg-secondary rounded-pill ms-auto">2</span>
+                    @if (ViewBag.MaintenanceRequestsCount > 0)
+                    {
+                        <span class="badge bg-secondary rounded-pill ms-auto">@ViewBag.MaintenanceRequestsCount</span>
+                    }
                 </a>
                 <a asp-controller="Housekeeping" asp-action="Inventory"
                    class="housekeeping-sidebar-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Inventory" ? "active" : "")">

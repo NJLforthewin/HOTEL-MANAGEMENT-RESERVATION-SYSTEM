@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 namespace Hotel_Management_System.Controllers
@@ -27,8 +28,28 @@ namespace Hotel_Management_System.Controllers
 
                 // Get all rooms with their current status
                 var rooms = await _context.Rooms.ToListAsync() ?? new List<Room>();
-                // Set ViewBag.AllRooms (since your view seems to use this)
+
+                // Get all active assignments
+                var assignments = await _context.HousekeepingAssignments
+                    .Include(a => a.Room)
+                    .Include(a => a.Staff)
+                    .Where(a => a.Status != "Completed")
+                    .ToListAsync();
+
+                // Create a dictionary to map roomId to staff name
+                var roomAssignments = new Dictionary<int, string>();
+                foreach (var assignment in assignments)
+                {
+                    if (assignment.Staff != null)
+                    {
+                        roomAssignments[assignment.RoomId] = assignment.Staff.FirstName + " " + assignment.Staff.LastName;
+                    }
+                }
+
+                // Set ViewBag
                 ViewBag.AllRooms = rooms;
+                ViewBag.RoomAssignments = roomAssignments;
+
                 // Handle null values for display
                 foreach (var room in rooms)
                 {
@@ -36,11 +57,16 @@ namespace Hotel_Management_System.Controllers
                     room.Category = room.Category ?? "Standard";
                     room.MaintenanceNotes = room.MaintenanceNotes ?? "";
                 }
+
                 // Prepare statistics for the dashboard
                 ViewBag.NeedsCleaning = rooms.Count(r => r.Status == "Needs Cleaning");
                 ViewBag.Maintenance = rooms.Count(r => r.Status == "Maintenance");
                 ViewBag.Available = rooms.Count(r => r.Status == "Available");
                 ViewBag.Occupied = rooms.Count(r => r.Status == "Occupied");
+
+                // Set these for the navigation badges
+                ViewBag.PendingRoomAssignments = ViewBag.NeedsCleaning;
+                ViewBag.MaintenanceRequestsCount = ViewBag.Maintenance;
 
                 // Get rooms that need attention based on recent checkouts
                 List<Booking> recentCheckouts = new List<Booking>();
@@ -73,10 +99,13 @@ namespace Hotel_Management_System.Controllers
                 // Create empty lists to avoid null reference exceptions
                 ViewBag.AllRooms = new List<Room>();
                 ViewBag.RecentCheckouts = new List<Booking>();
+                ViewBag.RoomAssignments = new Dictionary<int, string>();
                 ViewBag.NeedsCleaning = 0;
                 ViewBag.Maintenance = 0;
                 ViewBag.Available = 0;
                 ViewBag.Occupied = 0;
+                ViewBag.PendingRoomAssignments = 0;
+                ViewBag.MaintenanceRequestsCount = 0;
 
                 return View(new List<Room>());
             }
@@ -498,17 +527,30 @@ namespace Hotel_Management_System.Controllers
                     .Where(a => a.Status != "Completed")
                     .ToListAsync();
 
-                // Create a dictionary to map roomId to assignment
-                var roomAssignments = new Dictionary<int, HousekeepingAssignment>();
+                // Create a dictionary to map roomId to staff name
+                var roomAssignments = new Dictionary<int, string>();
                 foreach (var assignment in assignments)
                 {
-                    roomAssignments[assignment.RoomId] = assignment;
+                    if (assignment.Staff != null)
+                    {
+                        roomAssignments[assignment.RoomId] = assignment.Staff.FirstName + " " + assignment.Staff.LastName;
+                    }
                 }
 
-                ViewBag.StaffMembers = await _context.HousekeepingStaff
+                // Get housekeeping staff for dropdown lists
+                var staffList = await _context.HousekeepingStaff
                     .Where(s => s.IsActive)
+                    .Select(s => new {
+                        StaffId = s.StaffId,
+                        FullName = s.FirstName + " " + s.LastName
+                    })
                     .ToListAsync();
 
+                // Set counts for badge display in navigation
+                ViewBag.PendingRoomAssignments = rooms.Count(r => r.Status == "Needs Cleaning");
+                ViewBag.MaintenanceRequestsCount = rooms.Count(r => r.Status == "Maintenance");
+
+                ViewBag.StaffList = staffList;
                 ViewBag.RoomAssignments = roomAssignments;
 
                 return View(rooms);
@@ -517,9 +559,15 @@ namespace Hotel_Management_System.Controllers
             {
                 _logger.LogError(ex, "Error loading room assignments");
                 TempData["ErrorMessage"] = "An error occurred while loading room assignments: " + ex.Message;
+
+                // Set default values for navigation badges on error
+                ViewBag.PendingRoomAssignments = 0;
+                ViewBag.MaintenanceRequestsCount = 0;
+
                 return RedirectToAction(nameof(Index));
             }
         }
+
         public async Task<IActionResult> MaintenanceRequests()
         {
             try
@@ -572,28 +620,198 @@ namespace Hotel_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-        public IActionResult Inventory()
+        public async Task<IActionResult> Inventory()
         {
             try
             {
-                // Create sample inventory items (in real app, this would come from database)
-                var inventoryItems = new List<dynamic>
-        {
-            new { ItemName = "Cleaning Solution", TotalStock = 50, InUse = 12, Available = 38, ReorderLevel = 10 },
-            new { ItemName = "Towels", TotalStock = 200, InUse = 120, Available = 80, ReorderLevel = 50 },
-            new { ItemName = "Bed Sheets", TotalStock = 150, InUse = 100, Available = 50, ReorderLevel = 30 },
-            new { ItemName = "Soap Bars", TotalStock = 300, InUse = 150, Available = 150, ReorderLevel = 100 },
-            new { ItemName = "Toilet Paper", TotalStock = 400, InUse = 200, Available = 200, ReorderLevel = 100 }
-        };
+                // Set counts for badge display in navigation
+                ViewBag.PendingRoomAssignments = await _context.Rooms.CountAsync(r => r.Status == "Needs Cleaning");
+                ViewBag.MaintenanceRequestsCount = await _context.Rooms.CountAsync(r => r.Status == "Maintenance");
 
-                ViewBag.InventoryItems = inventoryItems;
+                // Get inventory items with careful error handling
+                List<InventoryItem> items;
+                try
+                {
+                    items = await _context.InventoryItems.ToListAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Database error retrieving inventory items");
+                    TempData["ErrorMessage"] = "Unable to retrieve inventory items from the database.";
+
+                    // Set default values
+                    ViewBag.InventoryItems = new List<dynamic>();
+                    ViewBag.TotalItems = 0;
+                    ViewBag.WellStockedCount = 0;
+                    ViewBag.LowStockCount = 0;
+                    ViewBag.OutOfStockCount = 0;
+                    ViewBag.PendingRoomAssignments = 0;
+                    ViewBag.MaintenanceRequestsCount = 0;
+
+                    return View();
+                }
+
+                var displayItems = new List<InventoryItem>();
+                int wellStockedCount = 0;
+                int lowStockCount = 0;
+                int outOfStockCount = 0;
+
+                // Process and count items
+                foreach (var item in items)
+                {
+                    if (item.Available <= 0)
+                        outOfStockCount++;
+                    else if (item.Available <= item.ReorderLevel)
+                        lowStockCount++;
+                    else
+                        wellStockedCount++;
+
+                    displayItems.Add(item);
+                }
+
+                // Set ViewBag values
+                ViewBag.InventoryItems = displayItems;
+                ViewBag.TotalItems = items.Count;
+                ViewBag.WellStockedCount = wellStockedCount;
+                ViewBag.LowStockCount = lowStockCount;
+                ViewBag.OutOfStockCount = outOfStockCount;
+
                 return View();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading inventory");
                 TempData["ErrorMessage"] = "An error occurred while loading inventory: " + ex.Message;
-                return RedirectToAction(nameof(Index));
+
+                // Set default values
+                ViewBag.InventoryItems = new List<dynamic>();
+                ViewBag.TotalItems = 0;
+                ViewBag.WellStockedCount = 0;
+                ViewBag.LowStockCount = 0;
+                ViewBag.OutOfStockCount = 0;
+                ViewBag.PendingRoomAssignments = 0;
+                ViewBag.MaintenanceRequestsCount = 0;
+
+                return View();
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IssueItem(int itemId, int quantity, string issuedTo, string roomNumber, string notes)
+        {
+            try
+            {
+                var item = await _context.InventoryItems.FindAsync(itemId);
+
+                if (item == null)
+                {
+                    TempData["ErrorMessage"] = "Item not found.";
+                    return RedirectToAction(nameof(Inventory));
+                }
+
+                int available = item.TotalStock - item.InUse;
+
+                if (quantity <= 0)
+                {
+                    TempData["ErrorMessage"] = "Quantity must be greater than zero.";
+                    return RedirectToAction(nameof(Inventory));
+                }
+
+                if (quantity > available)
+                {
+                    TempData["ErrorMessage"] = $"Cannot issue {quantity} items. Only {available} available.";
+                    return RedirectToAction(nameof(Inventory));
+                }
+
+                // Update the item
+                item.InUse += quantity;
+                item.LastUpdated = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Successfully issued {quantity} {item.ItemName}(s).";
+                return RedirectToAction(nameof(Inventory));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error issuing item");
+                TempData["ErrorMessage"] = "An error occurred while issuing items: " + ex.Message;
+                return RedirectToAction(nameof(Inventory));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReceiveStock(int itemId, int quantity, string receiptNumber, string supplier, string notes)
+        {
+            try
+            {
+                var item = await _context.InventoryItems.FindAsync(itemId);
+
+                if (item == null)
+                {
+                    TempData["ErrorMessage"] = "Item not found.";
+                    return RedirectToAction(nameof(Inventory));
+                }
+
+                if (quantity <= 0)
+                {
+                    TempData["ErrorMessage"] = "Quantity must be greater than zero.";
+                    return RedirectToAction(nameof(Inventory));
+                }
+
+                // Update the item
+                item.TotalStock += quantity;
+                item.LastUpdated = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Successfully received {quantity} {item.ItemName}(s).";
+                return RedirectToAction(nameof(Inventory));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error receiving stock");
+                TempData["ErrorMessage"] = "An error occurred while receiving stock: " + ex.Message;
+                return RedirectToAction(nameof(Inventory));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReceiveStock(int itemId, int quantity)
+        {
+            try
+            {
+                var item = await _context.InventoryItems.FindAsync(itemId);
+                if (item == null)
+                {
+                    return NotFound();
+                }
+
+                if (quantity > 0)
+                {
+                    item.TotalStock += quantity;
+                    item.LastUpdated = DateTime.Now;
+
+                    _context.Update(item);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = $"Successfully received {quantity} {item.ItemName}(s).";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Quantity must be greater than zero.";
+                }
+
+                return RedirectToAction(nameof(Inventory));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error receiving stock");
+                TempData["ErrorMessage"] = "An error occurred while receiving stock: " + ex.Message;
+                return RedirectToAction(nameof(Inventory));
             }
         }
 
@@ -654,6 +872,33 @@ namespace Hotel_Management_System.Controllers
                 _logger.LogError(ex, "Error processing checkout");
                 TempData["ErrorMessage"] = "An error occurred while processing checkout: " + ex.Message;
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+
+        private async Task SetCommonViewData()
+        {
+            try
+            {
+                // Count room assignments pending
+                int roomAssignmentsCount = await _context.Rooms
+                    .Where(r => r.Status == "Needs Cleaning")
+                    .CountAsync();
+
+                // Count maintenance requests
+                int maintenanceRequestsCount = await _context.Rooms
+                    .Where(r => r.Status == "Maintenance")
+                    .CountAsync();
+
+                // Set ViewBag values for navigation counts
+                ViewBag.PendingRoomAssignments = roomAssignmentsCount;
+                ViewBag.MaintenanceRequestsCount = maintenanceRequestsCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting common view data");
+                ViewBag.PendingRoomAssignments = 0;
+                ViewBag.MaintenanceRequestsCount = 0;
             }
         }
     }

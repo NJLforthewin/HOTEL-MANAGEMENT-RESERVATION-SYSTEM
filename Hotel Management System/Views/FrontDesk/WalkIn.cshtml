@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Hotel_Management_System.Models.Booking
+@{
     ViewData["Title"] = "Walk In Booking";
     Layout = "~/Views/Shared/BookingLayout.cshtml";
 }
@@ -14,69 +15,215 @@
             <h3><i class="fas fa-user-plus"></i> New Walk-In Booking</h3>
         </div>
         <div class="section-body p-4">
-            <form id="walkInForm" method="post" action="@Url.Action("ProcessWalkIn", "FrontDesk")">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form id="walkInForm" method="post" asp-action="ProcessWalkIn" asp-controller="FrontDesk">
+                @Html.AntiForgeryToken()
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Guest Name</label>
-                            <input type="text" class="form-control" name="GuestName" required>
+                            <label asp-for="GuestName" class="form-label">Guest Name</label>
+                            <input asp-for="GuestName" class="form-control" required>
+                            <span asp-validation-for="GuestName" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="Email" required>
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" required>
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            <input type="tel" class="form-control" name="Phone" required>
+                            <label asp-for="PhoneNumber" class="form-label">Phone</label>
+                            <input asp-for="PhoneNumber" class="form-control" type="tel" required>
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Room Type</label>
-                            <select class="form-select" name="RoomType" required>
-                                <option value="">Select Room Type</option>
-                                <option value="Standard">Standard</option>
-                                <option value="Deluxe">Deluxe</option>
-                                <option value="Suite">Suite</option>
+                            <label asp-for="RoomId" class="form-label">Room</label>
+                            <select asp-for="RoomId" class="form-select" required>
+                                <option value="">-- Select a Room --</option>
+                                @foreach (var room in ViewBag.AvailableRooms)
+                                {
+                                    <option value="@room.RoomId" data-price="@room.PricePerNight">
+                                        @room.RoomNumber - @room.Category (₱@room.PricePerNight/night)
+                                    </option>
+                                }
                             </select>
+                            <span asp-validation-for="RoomId" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Check-In Date</label>
-                            <input type="date" class="form-control" name="CheckInDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                            <label asp-for="CheckInDate" class="form-label">Check-In Date</label>
+                            <input asp-for="CheckInDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Check-Out Date</label>
-                            <input type="date" class="form-control" name="CheckOutDate" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required>
+                            <label asp-for="CheckOutDate" class="form-label">Check-Out Date</label>
+                            <input asp-for="CheckOutDate" class="form-control" type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required>
+                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Number of Guests</label>
-                            <input type="number" class="form-control" name="GuestCount" value="1" min="1" max="4" required>
+                            <label class="form-label">Price Per Night</label>
+                            <input type="text" class="form-control" id="PricePerNight" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="TotalPrice" class="form-label">Total Price</label>
+                            <input asp-for="TotalPrice" class="form-control" id="TotalPrice" readonly>
+                            <span asp-validation-for="TotalPrice" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Payment Method</label>
-                            <select class="form-select" name="PaymentMethod" required>
-                                <option value="">Select Payment Method</option>
+                            <label asp-for="PaymentMethod" class="form-label">Payment Method</label>
+                            <select asp-for="PaymentMethod" class="form-select" required>
+                                <option value="">-- Select Payment Method --</option>
                                 <option value="Cash">Cash</option>
                                 <option value="Credit Card">Credit Card</option>
                                 <option value="Debit Card">Debit Card</option>
+                                <option value="GCash">GCash</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
                             </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
                         </div>
+
+                        <input type="hidden" asp-for="BookingType" value="Walk-In">
                     </div>
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label">Special Requests</label>
-                    <textarea class="form-control" name="SpecialRequests" rows="3"></textarea>
+                    <textarea name="SpecialRequests" class="form-control" rows="3"></textarea>
                 </div>
+
                 <div class="d-flex justify-content-end">
+                    <a href="@Url.Action("Dashboard", "FrontDesk")" class="btn btn-secondary me-2"><i class="fas fa-times me-2"></i>Cancel</a>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-check me-2"></i>Create Booking</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Room prices script - no JSON parse needed -->
+<script type="text/javascript">
+    // Create room prices map directly in JavaScript
+    var roomPrices = {
+    @foreach (var room in ViewBag.AvailableRooms)
+    {
+        @Html.Raw($"\"{room.RoomId}\": {room.PricePerNight.ToString("0.00")}")
+        if (room != ViewBag.AvailableRooms[ViewBag.AvailableRooms.Count - 1])
+        {
+            @Html.Raw(",")
+        }
+    }
+    };
+</script>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        // Auto-update price when room selection changes
+        $(document).ready(function() {
+            // Initialize price display based on selected room
+            updatePrice();
+
+            // Update price when room selection changes
+            $("#RoomId").change(function() {
+                updatePrice();
+            });
+
+            // Update price when dates change
+            $("#CheckInDate, #CheckOutDate").change(function() {
+                updatePrice();
+            });
+
+            function updatePrice() {
+                var roomId = $("#RoomId").val();
+
+                // Debug
+                console.log("Room ID:", roomId);
+                console.log("Room Prices:", roomPrices);
+
+                var pricePerNight = roomId ? roomPrices[roomId] : 0;
+                if (!pricePerNight) pricePerNight = 0;
+
+                console.log("Price per night:", pricePerNight);
+
+                $("#PricePerNight").val("₱" + parseFloat(pricePerNight).toFixed(2));
+
+                // Calculate total price based on dates
+                var checkIn = new Date($("#CheckInDate").val());
+                var checkOut = new Date($("#CheckOutDate").val());
+
+                console.log("Check-in:", checkIn);
+                console.log("Check-out:", checkOut);
+
+                if (checkIn && checkOut && checkIn < checkOut) {
+                    var days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                    console.log("Days:", days);
+
+                    var totalPrice = days * parseFloat(pricePerNight);
+                    console.log("Total price:", totalPrice);
+
+                    $("#TotalPrice").val(totalPrice.toFixed(2));
+                } else {
+                    $("#TotalPrice").val("0.00");
+                }
+            }
+
+            // Form validation before submit
+            $("form").on("submit", function(e) {
+                var checkIn = new Date($("#CheckInDate").val());
+                var checkOut = new Date($("#CheckOutDate").val());
+
+                if (checkIn >= checkOut) {
+                    e.preventDefault();
+                    alert("Check-out date must be after check-in date");
+                    return false;
+                }
+
+                if (!$("#RoomId").val()) {
+                    e.preventDefault();
+                    alert("Please select a room");
+                    return false;
+                }
+
+                if (!$("#PaymentMethod").val()) {
+                    e.preventDefault();
+                    alert("Please select a payment method");
+                    return false;
+                }
+
+                // Make sure we have a numeric total price
+                var totalPrice = parseFloat($("#TotalPrice").val().replace(/[^0-9.-]+/g,""));
+                if (isNaN(totalPrice) || totalPrice <= 0) {
+                    e.preventDefault();
+                    alert("Invalid total price. Please check your dates and room selection.");
+                    return false;
+                }
+
+                // Set the TotalPrice to the numeric value without currency symbol
+                $("#TotalPrice").val(totalPrice.toFixed(2));
+
+                return true;
+            });
+        });
+    </script>
+}

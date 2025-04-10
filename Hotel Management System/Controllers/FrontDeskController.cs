@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Hotel_Management_System.Services;
 
 namespace Hotel_Management_System.Controllers
 {
@@ -13,10 +14,12 @@ namespace Hotel_Management_System.Controllers
     public class FrontDeskController : Controller
     {
         private readonly HotelManagementDbContext _context;
-
-        public FrontDeskController(HotelManagementDbContext context)
+        private readonly EmailService _emailService;
+        // Update your constructor to include the email service
+        public FrontDeskController(HotelManagementDbContext context, EmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [AllowAnonymous]
@@ -97,6 +100,14 @@ namespace Hotel_Management_System.Controllers
             ViewBag.AvailableRooms = availableRooms;
             ViewBag.SelectedRoomId = roomId;
 
+            // Create a dictionary of room prices manually
+            var roomPrices = new Dictionary<string, decimal>();
+            foreach (var room in availableRooms)
+            {
+                roomPrices[room.RoomId.ToString()] = room.PricePerNight;
+            }
+            ViewBag.RoomPrices = roomPrices;
+
             if (roomId.HasValue)
             {
                 var selectedRoom = _context.Rooms.FirstOrDefault(r => r.RoomId == roomId);
@@ -110,7 +121,7 @@ namespace Hotel_Management_System.Controllers
         }
 
         [HttpPost]
-        public IActionResult ProcessWalkIn(Booking booking, int roomId)
+        public async Task<IActionResult> ProcessWalkIn(Booking booking, int roomId)
         {
             try
             {
@@ -123,16 +134,45 @@ namespace Hotel_Management_System.Controllers
 
                 booking.RoomId = roomId;
                 booking.CreatedAt = DateTime.Now;
-                booking.Status = "Checked In";
+                booking.Status = "Checked-In";
                 booking.CheckedInAt = DateTime.Now;
                 booking.BookingType = "Walk-In";
+                booking.PaymentStatus = "Paid";
+
+                // Generate a transaction ID based on payment method
+                booking.TransactionId = $"{booking.PaymentMethod?.Replace("/", "").Replace(" ", "").ToUpper() ?? "CASH"}-{Guid.NewGuid().ToString().Substring(0, 8)}";
 
                 _context.Bookings.Add(booking);
 
                 // Update room status
                 room.Status = "Occupied";
 
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
+
+                // Send confirmation email if email is provided
+                if (!string.IsNullOrEmpty(booking.Email) && booking.Email != "No Email")
+                {
+                    try
+                    {
+                        await _emailService.SendBookingConfirmationAsync(
+                            booking.Email,
+                            booking.GuestName ?? "Valued Guest",
+                            booking.BookingId.ToString(),
+                            booking.CheckInDate,
+                            booking.CheckOutDate,
+                            room.RoomNumber,
+                            booking.TotalPrice,
+                            booking.PaymentMethod ?? "Cash" // Use the selected payment method
+                        );
+
+                        Debug.WriteLine($"Confirmation email sent to {booking.Email}");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error but don't stop the flow
+                        Debug.WriteLine($"Error sending email: {ex.Message}");
+                    }
+                }
 
                 TempData["SuccessMessage"] = "Walk-in booking created successfully!";
                 return RedirectToAction("Dashboard");

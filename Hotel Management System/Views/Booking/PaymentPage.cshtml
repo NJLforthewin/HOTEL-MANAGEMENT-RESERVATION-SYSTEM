@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Payment";
+}
+
+<link rel="stylesheet" href="~/css/payment.css" />
+
+<div class="container payment-container">
+    <div class="payment-header">
+        <h2>Complete Your Payment</h2>
+        <p class="text-muted">Secure payment powered by Paymongo</p>
+    </div>
+
+    <div class="payment-card">
+        <div class="payment-amount">
+            <h3>Amount Due</h3>
+            <div class="amount-value">₱@ViewBag.Amount.ToString("0.00")</div>
+        </div>
+
+        <div class="payment-form">
+            <form id="payment-form">
+                <div class="form-group">
+                    <label for="card-number">Card Number</label>
+                    <input type="text" id="card-number" class="form-control" placeholder="4343 4343 4343 4345" />
+                    <small class="form-text text-muted">Use test card: 4343 4343 4343 4345</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="expiry-date">Expiry Date</label>
+                            <input type="text" id="expiry-date" class="form-control" placeholder="MM/YY" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cvc">CVC</label>
+                            <input type="text" id="cvc" class="form-control" placeholder="123" />
+                        </div>
+                    </div>
+                </div>
+
+                <div id="payment-message" class="payment-message"></div>
+
+                <button id="submit-button" class="btn btn-primary btn-block mt-4">
+                    <div class="spinner hidden" id="spinner"></div>
+                    <span id="button-text">Pay Now</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('payment-form');
+            const submitButton = document.getElementById('submit-button');
+            const spinner = document.getElementById('spinner');
+            const buttonText = document.getElementById('button-text');
+            const paymentMessage = document.getElementById('payment-message');
+
+            // For demo/test purposes - simulating a payment flow
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Disable the submit button and show spinner
+                submitButton.disabled = true;
+                spinner.classList.remove('hidden');
+                buttonText.textContent = 'Processing...';
+
+                // Validate card number - must be test card for demo
+                const cardNumber = document.getElementById('card-number').value.replace(/\s+/g, '');
+
+                if (cardNumber === '4343434343434345') {
+                    // Simulate successful payment
+                    setTimeout(function() {
+                        window.location.href = '@Url.Action("PaymentCallback", "Booking", new { status = "succeeded", paymentIntentId = "test_payment_intent" })';
+                    }, 2000);
+                } else {
+                    // Show error for invalid test card
+                    paymentMessage.textContent = "For testing, please use the card number 4343 4343 4343 4345";
+                    paymentMessage.classList.add('text-danger');
+
+                    // Re-enable the submit button
+                    submitButton.disabled = false;
+                    spinner.classList.add('hidden');
+                    buttonText.textContent = 'Pay Now';
+                }
+            });
+        });
+    </script>
+}

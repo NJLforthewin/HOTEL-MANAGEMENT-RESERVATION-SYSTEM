@@ -218,7 +218,11 @@
                                 <span>New Booking</span>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="newBookingDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Create", "Booking")"><i class="fas fa-calendar-plus me-2"></i>Regular Booking</a></li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("CreateBooking", "Admin")">
+                                        <i class="fas fa-calendar me-2"></i> Regular Booking
+                                    </a>
+                                </li>
                                 <li><a class="dropdown-item" href="@Url.Action("WalkInBooking", "Admin")"><i class="fas fa-walking me-2"></i>Walk-In Booking</a></li>
                             </ul>
                         </div>

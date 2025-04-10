@@ -1,0 +1,219 @@
+﻿/* Base styles */
+.booking-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+}
+
+.booking-title {
+    color: #800020;
+    margin-bottom: 5px;
+    font-size: 1.8rem;
+}
+
+.booking-subtitle {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.booking-divider {
+    border-top: 1px solid #ddd;
+    margin: 15px 0 20px;
+}
+
+/* Section styling */
+.section-card {
+    margin-bottom: 15px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.section-header {
+    background-color: #800020;
+    color: white;
+    padding: 10px 15px;
+}
+
+    .section-header h4 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+.section-body {
+    background-color: #fff;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+/* Form controls */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    height: auto;
+    padding: 8px 12px;
+}
+
+/* Booking Type Selector */
+.booking-type-section {
+    margin-top: 10px;
+}
+
+.booking-type-option {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    background-color: #fff;
+    height: 100%;
+}
+
+    .booking-type-option:hover {
+        background-color: #f9f9f9;
+        border-color: #ccc;
+    }
+
+    .booking-type-option.selected {
+        background-color: #f8f0f2;
+        border-color: #800020;
+        box-shadow: 0 0 0 1px #800020;
+    }
+
+    .booking-type-option strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .booking-type-option input[type="radio"] {
+        margin-right: 8px;
+    }
+
+/* Action buttons */
+.form-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.btn-primary {
+    background-color: #800020;
+    border-color: #800020;
+}
+
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: #6a001a;
+        border-color: #6a001a;
+    }
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    margin-left: 10px;
+}
+
+/* Validation */
+.validation-summary {
+    margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .section-body {
+        padding: 10px;
+    }
+
+    .form-actions {
+        text-align: center;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+        margin-left: 0 !important;
+    }
+}
+
+
+/* Payment Method Selection Styles */
+.payment-method-section {
+    margin-top: 20px;
+}
+
+.payment-methods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.payment-method-item {
+    flex: 1;
+    min-width: 120px;
+}
+
+    .payment-method-item input[type="radio"] {
+        display: none;
+    }
+
+    .payment-method-item label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #f8f8f8;
+    }
+
+    .payment-method-item input[type="radio"]:checked + label {
+        border-color: #800020;
+        background-color: rgba(128, 0, 32, 0.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+.payment-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #800020;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gcash-icon {
+    color: #0074e4;
+}
+
+.paymaya-icon {
+    color: #f7941d;
+}
+
+.payment-method-item span {
+    font-weight: 500;
+    color: #444;
+}
+
+.bank-transfer-icon {
+    color: #28a745; 
+}
+
+.payment-method-item input[type="radio"]:checked + label span {
+    color: #800020;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .payment-methods {
+        flex-direction: column;
+    }
+
+    .payment-method-item {
+        width: 100%;
+    }
+}
