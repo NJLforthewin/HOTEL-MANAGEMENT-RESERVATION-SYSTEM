@@ -1,0 +1,166 @@
+﻿@model Hotel_Management_System.Models.Booking
+@{
+    ViewData["Title"] = "Payment Receipt";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+<link rel="stylesheet" href="~/css/receipt-styles.css" />
+<div class="receipt-container" id="printableReceipt">
+    <div class="receipt-header">
+        <div class="hotel-logo">
+            <img src="~/images/hotel-logo.png" alt="Hotel Logo" />
+        </div>
+        <div class="hotel-info">
+            <h2>Nuxus Hotel</h2>
+            <p>123 Main Street, City, State, ZIP</p>
+            <p>Phone: (123) 456-7890 | Email: info@nuxushotel.com</p>
+        </div>
+    </div>
+
+    <div class="receipt-title">
+        <h1>PAYMENT RECEIPT</h1>
+        <div class="receipt-number">Receipt #: @Model.TransactionId</div>
+        <div class="receipt-date">Date: @DateTime.Now.ToString("MMMM dd, yyyy")</div>
+    </div>
+
+    <div class="receipt-body">
+        <div class="guest-info">
+            <h3>Guest Information</h3>
+            <table class="info-table">
+                <tr>
+                    <td><strong>Name:</strong></td>
+                    <td>@Model.GuestName</td>
+                </tr>
+                <tr>
+                    <td><strong>Email:</strong></td>
+                    <td>@Model.Email</td>
+                </tr>
+                <tr>
+                    <td><strong>Phone:</strong></td>
+                    <td>@Model.PhoneNumber</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="booking-info">
+            <h3>Reservation Details</h3>
+            <table class="info-table">
+                <tr>
+                    <td><strong>Booking ID:</strong></td>
+                    <td>@Model.BookingId</td>
+                </tr>
+                <tr>
+                    <td><strong>Room:</strong></td>
+                    <td>@(Model.Room != null ? $"{Model.Room.RoomNumber} ({Model.Room.Category})" : "N/A")</td>
+                </tr>
+                <tr>
+                    <td><strong>Check-in:</strong></td>
+                    <td>@Model.CheckInDate.ToString("MMM dd, yyyy")</td>
+                </tr>
+                <tr>
+                    <td><strong>Check-out:</strong></td>
+                    <td>@Model.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                </tr>
+                <tr>
+                    <td><strong>Nights:</strong></td>
+                    <td>@((Model.CheckOutDate - Model.CheckInDate).Days)</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="payment-info">
+            <h3>Payment Details</h3>
+            <table class="payment-table">
+                <tr>
+                    <td><strong>Payment Method:</strong></td>
+                    <td>@Model.PaymentMethod</td>
+                </tr>
+                <tr>
+                    <td><strong>Transaction ID:</strong></td>
+                    <td>@Model.TransactionId</td>
+                </tr>
+                <tr>
+                    <td><strong>Payment Status:</strong></td>
+                    <td>@Model.PaymentStatus</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="charge-summary">
+            <h3>Charge Summary</h3>
+            <table class="charge-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Rate</th>
+                        <th>Nights</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Room Charge (@(Model.Room != null ? Model.Room.Category : "N/A"))</td>
+                        <td>₱@(Model.Room != null ? Model.Room.PricePerNight.ToString("N2") : "0.00")/night</td>
+                        <td>@((Model.CheckOutDate - Model.CheckInDate).Days)</td>
+                        <td>₱@Model.TotalPrice.ToString("N2")</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3"><strong>TOTAL</strong></td>
+                        <td><strong>₱@Model.TotalPrice.ToString("N2")</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="receipt-footer">
+        <p>Thank you for choosing Nuxus Hotel!</p>
+        <p>We hope you enjoy your stay with us.</p>
+        <p class="small">This receipt was generated on @DateTime.Now.ToString("MMMM dd, yyyy") at @DateTime.Now.ToString("hh:mm tt")</p>
+    </div>
+</div>
+
+<div class="receipt-actions">
+    <button class="btn btn-primary" onclick="printReceipt()">
+        <i class="fas fa-print me-2"></i>Print Receipt
+    </button>
+    <a href="@Url.Action("Dashboard", "FrontDesk")" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+                function printReceipt() {
+            // Create a new window for printing
+            var printWindow = window.open('', '_blank');
+
+            // Get the printable content
+            var content = document.getElementById('printableReceipt').innerHTML;
+
+            // Create HTML content with simplified styling
+            var htmlContent = '<!DOCTYPE html>';
+            htmlContent += '<html>';
+            htmlContent += '<head>';
+            htmlContent += '<title>Receipt #' + '@Model.TransactionId' + '</title>';
+            htmlContent += '<link rel="stylesheet" href="/css/receipt-styles.css" />';
+            htmlContent += '</head>';
+            htmlContent += '<body>';
+            htmlContent += '<div class="receipt-container">';
+            htmlContent += content;
+            htmlContent += '</div>';
+            htmlContent += '<script>';
+            htmlContent += 'window.onload = function() {';
+            htmlContent += '  window.print();';
+            htmlContent += '  setTimeout(function() { window.close(); }, 500);';
+            htmlContent += '};';
+            htmlContent += '<\/script>';
+            htmlContent += '</body>';
+            htmlContent += '</html>';
+
+            // Write to the print window
+            printWindow.document.open();
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+        }
+    </script>
+}

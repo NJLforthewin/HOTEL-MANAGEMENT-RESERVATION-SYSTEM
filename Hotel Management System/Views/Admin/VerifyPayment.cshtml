@@ -1,0 +1,134 @@
+﻿@model Hotel_Management_System.Models.Booking
+@{
+    ViewData["Title"] = "Verify Payment";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+<link rel="stylesheet" href="~/css/payment-verification.css" />
+
+
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-check-circle me-2"></i>Verify Payment</h1>
+        <p class="page-subtitle">Booking #BK@(Model.BookingId.ToString("D4"))</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Booking Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Guest Name</p>
+                            <p class="fw-bold">@Model.GuestName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Email</p>
+                            <p class="fw-bold">@Model.Email</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Phone</p>
+                            <p class="fw-bold">@Model.PhoneNumber</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Room</p>
+                            <p class="fw-bold">@(Model.Room?.RoomNumber ?? "Not assigned") (@(Model.Room?.Category ?? "Unknown"))</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Check-in Date</p>
+                            <p class="fw-bold">@Model.CheckInDate.ToString("MMM dd, yyyy")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Check-out Date</p>
+                            <p class="fw-bold">@Model.CheckOutDate.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Booking Type</p>
+                            <p class="fw-bold">@Model.BookingType</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Transaction ID</p>
+                            <p class="fw-bold">@(Model.TransactionId ?? "N/A")</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Payment Method</p>
+                            <p class="fw-bold">@Model.PaymentMethod</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Total Amount</p>
+                            <p class="fw-bold text-primary">$@Model.TotalPrice.ToString("0.00")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Verify Payment</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="VerifyPayment" asp-controller="Admin" method="post">
+                        <input type="hidden" name="bookingId" value="@Model.BookingId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Status</label>
+                            <select name="paymentStatus" id="paymentStatus" class="form-select mb-3">
+                                @{
+                                    var paymentStatuses = new[] { "Paid", "Unpaid", "Partial", "Pending" };
+                                    foreach (var status in paymentStatuses)
+                                    {
+                                        <option value="@status" selected="@(Model.PaymentStatus == status)">@(status == "Partial" ? "Partial Payment" : status)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Verification Status</label>
+                            <div class="verification-radio-group">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="verificationStatus" id="verified" value="verified" checked>
+                                    <label class="form-check-label" for="verified">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Payment Verified
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="verificationStatus" id="unverified" value="unverified">
+                                    <label class="form-check-label" for="unverified">
+                                        <i class="fas fa-times-circle text-danger me-2"></i>Payment Not Verified
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="verificationNote" class="form-label">Verification Note</label>
+                            <textarea name="verificationNote" id="verificationNote" class="form-control" rows="3" placeholder="Add verification details or notes here...">@Model.VerificationNote</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Verification
+                            </button>
+                            <a href="@Url.Action("PendingVerifications", "Admin")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

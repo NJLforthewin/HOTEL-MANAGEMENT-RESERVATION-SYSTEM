@@ -8,8 +8,6 @@ namespace Hotel_Management_System.Models
     {
         [Key]
         public int BookingId { get; set; }
-
-        // Make UserId nullable
         public int? UserId { get; set; }
 
         [Required(ErrorMessage = "Guest Name is required.")]
@@ -49,12 +47,15 @@ namespace Hotel_Management_System.Models
         public DateTime? CheckedOutAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Change from 'required' to nullable
         public User? User { get; set; }
 
-        // New fields for payment processing
-        public string? PaymentMethod { get; set; } // e.g., Credit Card, Online Wallet
-        public string? PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed
-        public string? TransactionId { get; set; } // Reference ID for payment gateway
+        public string? PaymentMethod { get; set; }
+        public string? PaymentStatus { get; set; } = "Pending"; 
+        public string? TransactionId { get; set; } 
+
+        public bool? PaymentVerified { get; set; } = false;
+        public string? VerificationNote { get; set; }
+        public string? VerifiedBy { get; set; }
+        public DateTime? VerificationDate { get; set; }
     }
 }

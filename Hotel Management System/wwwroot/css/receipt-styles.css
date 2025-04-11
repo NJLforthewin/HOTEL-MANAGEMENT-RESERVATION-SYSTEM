@@ -1,0 +1,151 @@
+﻿/* receipt-styles.css */
+.receipt-container {
+    width: 300px; /* Thermal receipt style width */
+    margin: 20px auto;
+    padding: 15px;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.receipt-header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #ccc;
+}
+
+.hotel-logo img {
+    max-width: 100px;
+    height: auto;
+    margin-bottom: 8px;
+}
+
+.hotel-info h2 {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.hotel-info p {
+    margin: 3px 0;
+    font-size: 10px;
+}
+
+.receipt-title {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+    .receipt-title h1 {
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+.receipt-number, .receipt-date {
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+.receipt-body h3 {
+    font-size: 14px;
+    padding-bottom: 3px;
+    margin: 10px 0 5px 0;
+    border-bottom: 1px dashed #ccc;
+}
+
+.info-table, .payment-table, .charge-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 5px 0;
+    font-size: 11px;
+}
+
+    .info-table td {
+        padding: 2px;
+        vertical-align: top;
+    }
+
+.charge-table {
+    border-top: 1px dashed #ccc;
+    border-bottom: 1px dashed #ccc;
+    padding: 5px 0;
+}
+
+    .charge-table th, .charge-table td {
+        padding: 3px;
+        text-align: left;
+    }
+
+    .charge-table th {
+        font-weight: bold;
+    }
+
+.total-row {
+    font-weight: bold;
+    border-top: 1px dashed #ccc;
+}
+
+.receipt-footer {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 10px;
+    border-top: 1px dashed #ccc;
+    padding-top: 8px;
+}
+
+    .receipt-footer p {
+        margin: 3px 0;
+    }
+
+.small {
+    font-size: 9px;
+    color: #666;
+}
+
+.receipt-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Print-specific styles - only included in the CSS file, not in the JavaScript */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .receipt-container, .receipt-container * {
+        visibility: visible;
+    }
+
+    .receipt-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 0;
+        width: 300px !important;
+        border: none !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+
+    .receipt-actions {
+        display: none !important;
+    }
+
+    /* More compact layout for printing */
+    .receipt-body h3 {
+        margin-top: 8px;
+    }
+
+    /* Smaller font for charge table when printing */
+    .charge-table {
+        font-size: 10px;
+    }
+}
+
+@page {
+    size: 300px auto;
+    margin: 0;
+}

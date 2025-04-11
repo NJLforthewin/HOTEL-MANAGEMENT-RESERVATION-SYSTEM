@@ -89,6 +89,69 @@ namespace Hotel_Management_System.Controllers
             }
         }
 
+        public IActionResult ConfirmedBookings()
+        {
+            var confirmedBookings = _context.Bookings
+                .Where(b => b.Status == "Confirmed")
+                .Include(b => b.Room)
+                .OrderBy(b => b.CheckInDate)
+                .ToList();
+
+            return View(confirmedBookings);
+        }
+
+        public IActionResult PendingBookings()
+        {
+            var pendingBookings = _context.Bookings
+                .Where(b => b.Status == "Pending") 
+                .Include(b => b.Room)
+                .OrderBy(b => b.CheckInDate)
+                .ToList();
+
+            return View(pendingBookings);
+        }
+
+
+        [HttpGet]
+        public IActionResult GetDashboardData()
+        {
+            try
+            {
+                var today = DateTime.Today;
+
+                // Calculate the same statistics as in the Dashboard action
+                var todayArrivalsCount = _context.Bookings
+                    .Count(b => b.CheckInDate.Date == today &&
+                            (b.Status == "Confirmed" || b.Status == "Pending" || b.Status == "Reserved") &&
+                            b.CheckedInAt == null);
+
+                var todayDeparturesCount = _context.Bookings
+                    .Count(b => b.CheckOutDate.Date == today &&
+                            b.Status == "Checked-In" &&
+                            b.CheckedInAt != null &&
+                            b.CheckedOutAt == null);
+
+                var pendingCount = _context.Bookings
+                    .Count(b => b.Status != null && b.Status.Trim() == "Pending");
+
+                var totalRooms = _context.Rooms.Count();
+                var occupiedRooms = _context.Rooms.Count(r => r.Status == "Occupied");
+                int occupancyRate = totalRooms > 0 ? (occupiedRooms * 100) / totalRooms : 0;
+
+                return Json(new
+                {
+                    todayArrivals = todayArrivalsCount,
+                    todayDepartures = todayDeparturesCount,
+                    pendingBookings = pendingCount,
+                    occupancyRate = occupancyRate
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
         [HttpGet]
         public IActionResult WalkIn(int? roomId = null)
         {
@@ -120,6 +183,171 @@ namespace Hotel_Management_System.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult NewReservation(int? roomId = null)
+        {
+            var availableRooms = _context.Rooms
+                .Where(r => r.Status == "Available")
+                .OrderBy(r => r.RoomNumber)
+                .ToList();
+
+            ViewBag.AvailableRooms = availableRooms;
+            ViewBag.SelectedRoomId = roomId;
+
+            // Create a dictionary of room prices manually
+            var roomPrices = new Dictionary<string, decimal>();
+            foreach (var room in availableRooms)
+            {
+                roomPrices[room.RoomId.ToString()] = room.PricePerNight;
+            }
+            ViewBag.RoomPrices = roomPrices;
+
+            if (roomId.HasValue)
+            {
+                var selectedRoom = _context.Rooms.FirstOrDefault(r => r.RoomId == roomId);
+                if (selectedRoom != null)
+                {
+                    ViewBag.SelectedRoom = selectedRoom;
+                }
+            }
+
+            // Set the booking type to Reservation by default
+            ViewBag.BookingType = "Reservation";
+
+            return View("WalkIn"); // Reuse the WalkIn view with different default values
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessBooking(Booking booking)
+        {
+            try
+            {
+                var room = _context.Rooms.Find(booking.RoomId);
+                if (room == null || room.Status != "Available")
+                {
+                    TempData["ErrorMessage"] = "Selected room is not available.";
+                    return RedirectToAction(booking.BookingType == "Reservation" ? "NewReservation" : "WalkIn");
+                }
+
+                booking.CreatedAt = DateTime.Now;
+
+                // Set status based on booking type
+                if (booking.BookingType == "Walk-In")
+                {
+                    booking.Status = "Checked-In";
+                    booking.CheckedInAt = DateTime.Now;
+                    room.Status = "Occupied";
+                }
+                else // Reservation
+                {
+                    booking.Status = "Confirmed";
+                    // Room stays "Available" for future reservations
+                }
+
+                // Handle payment based on method
+                switch (booking.PaymentMethod)
+                {
+                    case "Credit Card":
+                        // For front desk bookings, we assume the credit card payment is processed manually
+                        booking.PaymentStatus = "Paid";
+                        booking.TransactionId = $"CREDITCARD-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                        break;
+
+                    case "GCash":
+                        if (booking.BookingType == "Walk-In")
+                        {
+                            // For walk-ins, we assume GCash is already paid
+                            booking.PaymentStatus = "Paid";
+                            booking.TransactionId = $"GCASH-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                        }
+                        else
+                        {
+                            // For reservations, mark as pending if GCash
+                            booking.PaymentStatus = "Pending";
+                            booking.TransactionId = $"GCASH-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                        }
+                        break;
+
+                    case "Bank Transfer":
+                        booking.PaymentStatus = "Pending";
+                        booking.TransactionId = $"BANKTRANSFER-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                        break;
+
+                    case "Cash":
+                    default:
+                        booking.PaymentStatus = "Paid";
+                        booking.TransactionId = $"CASH-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                        break;
+                }
+
+                _context.Bookings.Add(booking);
+                await _context.SaveChangesAsync();
+
+                // Send confirmation email
+                if (!string.IsNullOrEmpty(booking.Email) && booking.Email != "No Email")
+                {
+                    try
+                    {
+                        await _emailService.SendBookingConfirmationAsync(
+                            booking.Email,
+                            booking.GuestName ?? "Valued Guest",
+                            booking.BookingId.ToString(),
+                            booking.CheckInDate,
+                            booking.CheckOutDate,
+                            room.RoomNumber,
+                            booking.TotalPrice,
+                            booking.PaymentMethod ?? "Cash"
+                        );
+
+                        Debug.WriteLine($"Confirmation email sent to {booking.Email}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Error sending email: {ex.Message}");
+                    }
+                }
+
+                // For Cash payments, redirect to the printable receipt
+                if (booking.PaymentMethod == "Cash")
+                {
+                    TempData["SuccessMessage"] = booking.BookingType == "Reservation"
+                        ? "Reservation created successfully!"
+                        : "Walk-in booking created successfully!";
+
+                    return RedirectToAction("Receipt", new { bookingId = booking.BookingId });
+                }
+
+                // For other payment methods, redirect to Dashboard
+                TempData["SuccessMessage"] = booking.BookingType == "Reservation"
+                    ? "Reservation created successfully!"
+                    : "Walk-in booking created successfully!";
+
+                return RedirectToAction("Dashboard");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ERROR] Error processing booking: {ex.Message}");
+                TempData["ErrorMessage"] = "An error occurred while processing the booking.";
+                return RedirectToAction(booking.BookingType == "Reservation" ? "NewReservation" : "WalkIn");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Receipt(int bookingId)
+        {
+            var booking = _context.Bookings
+                .Include(b => b.Room)
+                .FirstOrDefault(b => b.BookingId == bookingId);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found";
+                return RedirectToAction("Dashboard");
+            }
+
+            return View(booking);
+        }
+
         [HttpPost]
         public async Task<IActionResult> ProcessWalkIn(Booking booking, int roomId)
         {
@@ -139,17 +367,14 @@ namespace Hotel_Management_System.Controllers
                 booking.BookingType = "Walk-In";
                 booking.PaymentStatus = "Paid";
 
-                // Generate a transaction ID based on payment method
                 booking.TransactionId = $"{booking.PaymentMethod?.Replace("/", "").Replace(" ", "").ToUpper() ?? "CASH"}-{Guid.NewGuid().ToString().Substring(0, 8)}";
 
                 _context.Bookings.Add(booking);
 
-                // Update room status
                 room.Status = "Occupied";
 
                 await _context.SaveChangesAsync();
 
-                // Send confirmation email if email is provided
                 if (!string.IsNullOrEmpty(booking.Email) && booking.Email != "No Email")
                 {
                     try
@@ -162,14 +387,13 @@ namespace Hotel_Management_System.Controllers
                             booking.CheckOutDate,
                             room.RoomNumber,
                             booking.TotalPrice,
-                            booking.PaymentMethod ?? "Cash" // Use the selected payment method
+                            booking.PaymentMethod ?? "Cash"
                         );
 
                         Debug.WriteLine($"Confirmation email sent to {booking.Email}");
                     }
                     catch (Exception ex)
                     {
-                        // Log the error but don't stop the flow
                         Debug.WriteLine($"Error sending email: {ex.Message}");
                     }
                 }
@@ -190,16 +414,12 @@ namespace Hotel_Management_System.Controllers
         {
             try
             {
-                // Start with rooms that have "Available" status
                 var query = _context.Rooms.Where(r => r.Status == "Available");
 
-                // Apply category filter if provided
                 if (!string.IsNullOrEmpty(category))
                 {
                     query = query.Where(r => r.Category == category);
                 }
-
-                // Apply sorting
                 query = sortBy?.ToLower() switch
                 {
                     "price" => query.OrderBy(r => r.PricePerNight),
@@ -210,7 +430,6 @@ namespace Hotel_Management_System.Controllers
 
                 var availableRooms = query.ToList();
 
-                // Prepare for the view
                 ViewBag.Categories = _context.Rooms
                     .Select(r => r.Category)
                     .Where(c => c != null)
@@ -234,18 +453,14 @@ namespace Hotel_Management_System.Controllers
         {
             try
             {
-                // Get checked-in bookings
                 var query = _context.Bookings
                     .Include(b => b.Room)
                     .Where(b => b.Status == "Checked-In" && b.CheckedOutAt == null);
 
-                // Filter by checkout date if provided
                 if (checkOutDate.HasValue)
                 {
                     query = query.Where(b => b.CheckOutDate.Date == checkOutDate.Value.Date);
                 }
-
-                // Apply sorting
                 query = sortBy?.ToLower() switch
                 {
                     "checkoutdate" => query.OrderBy(b => b.CheckOutDate),
@@ -255,7 +470,6 @@ namespace Hotel_Management_System.Controllers
 
                 var bookedRooms = query.ToList();
 
-                // Prepare for the view
                 ViewBag.CheckOutDate = checkOutDate;
                 ViewBag.SortBy = sortBy;
                 ViewBag.BookingCount = bookedRooms.Count;
@@ -275,18 +489,14 @@ namespace Hotel_Management_System.Controllers
         {
             try
             {
-                // Get confirmed bookings that haven't checked in yet
                 var query = _context.Bookings
                     .Include(b => b.Room)
                     .Where(b => (b.Status == "Confirmed" || b.Status == "Reserved") && b.CheckedInAt == null);
-
-                // Filter by arrival date if provided
                 if (arrivalDate.HasValue)
                 {
                     query = query.Where(b => b.CheckInDate.Date == arrivalDate.Value.Date);
                 }
 
-                // Apply sorting
                 query = sortBy?.ToLower() switch
                 {
                     "guestname" => query.OrderBy(b => b.GuestName),
@@ -296,7 +506,6 @@ namespace Hotel_Management_System.Controllers
 
                 var reservedRooms = query.ToList();
 
-                // Get all distinct arrival dates for filter dropdown
                 var arrivalDates = _context.Bookings
                     .Where(b => (b.Status == "Confirmed" || b.Status == "Reserved") && b.CheckedInAt == null)
                     .Select(b => b.CheckInDate.Date)
@@ -304,7 +513,6 @@ namespace Hotel_Management_System.Controllers
                     .OrderBy(d => d)
                     .ToList();
 
-                // Prepare for the view
                 ViewBag.ArrivalDates = arrivalDates;
                 ViewBag.SelectedDate = arrivalDate;
                 ViewBag.SortBy = sortBy;
@@ -325,10 +533,8 @@ namespace Hotel_Management_System.Controllers
         {
             try
             {
-                // Start with all rooms
                 var query = _context.Rooms.AsQueryable();
 
-                // Apply filters
                 if (!string.IsNullOrEmpty(status))
                 {
                     query = query.Where(r => r.Status == status);
@@ -339,7 +545,6 @@ namespace Hotel_Management_System.Controllers
                     query = query.Where(r => r.Category == category);
                 }
 
-                // Apply sorting
                 query = sortBy?.ToLower() switch
                 {
                     "price" => query.OrderBy(r => r.PricePerNight),
@@ -350,7 +555,6 @@ namespace Hotel_Management_System.Controllers
 
                 var rooms = query.ToList();
 
-                // Get all distinct categories and statuses for filter dropdowns
                 var categories = _context.Rooms
                     .Select(r => r.Category)
                     .Where(c => c != null)
@@ -365,7 +569,6 @@ namespace Hotel_Management_System.Controllers
                     .OrderBy(s => s)
                     .ToList();
 
-                // For rooms that are occupied, find their current bookings
                 var occupiedRoomIds = rooms
                     .Where(r => r.Status == "Occupied")
                     .Select(r => r.RoomId)
@@ -375,7 +578,6 @@ namespace Hotel_Management_System.Controllers
                     .Where(b => b.Status == "Checked-In" && occupiedRoomIds.Contains(b.RoomId))
                     .ToDictionary(b => b.RoomId);
 
-                // Prepare for the view
                 ViewBag.Categories = categories;
                 ViewBag.Statuses = statuses;
                 ViewBag.SelectedCategory = category;
@@ -421,26 +623,36 @@ namespace Hotel_Management_System.Controllers
         [HttpPost]
         public IActionResult Confirm(int bookingId)
         {
-            var booking = _context.Bookings.Include(b => b.Room).FirstOrDefault(b => b.BookingId == bookingId);
+            var booking = _context.Bookings
+                .Include(b => b.Room)
+                .FirstOrDefault(b => b.BookingId == bookingId);
+
             if (booking == null)
             {
                 Debug.WriteLine($"[ERROR] Booking ID {bookingId} not found.");
                 TempData["ErrorMessage"] = "Booking not found!";
                 return RedirectToAction("Dashboard");
             }
+            if (booking.PaymentVerified != true)
+            {
+                Debug.WriteLine($"[ERROR] Cannot confirm booking ID {bookingId}. Payment not verified by admin.");
+                TempData["ErrorMessage"] = "Cannot confirm booking - payment not verified by admin!";
+                return RedirectToAction("PendingBookings");
+            }
 
-            if (booking.Status != null && booking.Status.Trim() == "Pending")
+            booking.Status = "Confirmed";
+
+            if (booking.CheckInDate.Date <= DateTime.Today)
             {
-                booking.Status = "Confirmed";
-                _context.SaveChanges();
-                TempData["SuccessMessage"] = "Booking confirmed successfully!";
-                Debug.WriteLine($"[SUCCESS] Booking ID {bookingId} confirmed.");
+                if (booking.Room != null)
+                {
+                    booking.Room.Status = "Booked";
+                }
             }
-            else
-            {
-                Debug.WriteLine($"[WARNING] Booking ID {bookingId} could not be confirmed. Current status: {booking.Status}");
-                TempData["ErrorMessage"] = "Booking cannot be confirmed!";
-            }
+
+            _context.SaveChanges();
+            TempData["SuccessMessage"] = "Booking confirmed successfully!";
+            Debug.WriteLine($"[SUCCESS] Booking ID {bookingId} confirmed. Payment status: {booking.PaymentStatus}");
 
             return RedirectToAction("Dashboard");
         }
@@ -479,18 +691,18 @@ namespace Hotel_Management_System.Controllers
                 if (room == null)
                 {
                     TempData["ErrorMessage"] = "Room not found!";
-                    return RedirectToAction("Dashboard");
+                    return RedirectToAction("BookedRooms"); 
                 }
 
                 var booking = _context.Bookings
                     .Include(b => b.Room)
                     .FirstOrDefault(b => b.Room != null && b.Room.RoomId == room.RoomId &&
-                                         b.CheckedInAt != null && b.CheckedOutAt == null);
+                                       b.CheckedInAt != null && b.CheckedOutAt == null);
 
                 if (booking == null)
                 {
                     TempData["ErrorMessage"] = "No active booking found for this room!";
-                    return RedirectToAction("Dashboard");
+                    return RedirectToAction("BookedRooms");  
                 }
 
                 // Process checkout
@@ -509,13 +721,13 @@ namespace Hotel_Management_System.Controllers
 
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = $"Room {roomNumber} has been checked out successfully!";
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("BookedRooms");  
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[ERROR] Error processing checkout: {ex.Message}");
                 TempData["ErrorMessage"] = "An error occurred during checkout.";
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("BookedRooms"); 
             }
         }
 
@@ -546,6 +758,8 @@ namespace Hotel_Management_System.Controllers
                 // Option 1: "Checked-In" with hyphen
                 booking.Status = "Checked-In";
                 booking.CheckedInAt = DateTime.Now;
+
+
 
                 if (booking.Room != null)
                 {

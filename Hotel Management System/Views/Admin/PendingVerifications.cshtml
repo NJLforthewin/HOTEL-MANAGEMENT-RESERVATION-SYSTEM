@@ -1,0 +1,123 @@
+﻿@model List<Hotel_Management_System.Models.Booking>
+@{
+    ViewData["Title"] = "Payment Verifications";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/payment-verification.css" />
+
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-money-check-alt me-2"></i>Payment Verifications</h1>
+        <p class="page-subtitle">Verify payment status for pending bookings</p>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Unverified Payments</h5>
+                <span class="badge bg-warning text-dark">@Model.Count pending</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-in</th>
+                            <th>Payment Method</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count > 0)
+                        {
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td>#BK@(booking.BookingId.ToString("D4"))</td>
+                                    <td>@booking.GuestName</td>
+                                    <td>@(booking.Room?.RoomNumber ?? "Not assigned")</td>
+                                    <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge @(booking.PaymentMethod == "Cash" ? "bg-success" : (booking.PaymentMethod == "Bank Transfer" ? "bg-info" : "bg-primary"))">
+                                            @(booking.PaymentMethod ?? "Not specified")
+                                        </span>
+                                    </td>
+                                    <td>$@booking.TotalPrice.ToString("0.00")</td>
+                                    <td>
+                                        <span class="badge @(booking.PaymentStatus == "Paid" ? "bg-success" :
+                                                           (booking.PaymentStatus == "Partial" ? "bg-warning text-dark" :
+                                                           (booking.PaymentStatus == "Unpaid" ? "bg-danger" : "bg-secondary")))">
+                                            @booking.PaymentStatus
+                                        </span>
+                                        <span class="badge @(booking.PaymentVerified == true ? "bg-success" : "bg-danger") ms-1">
+                                            @(booking.PaymentVerified == true ? "Verified" : "Unverified")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#verifyModal_@booking.BookingId">
+                                            <i class="fas fa-check-circle me-1"></i> Verify
+                                        </button>
+
+                                        <!-- Verification Modal -->
+                                        <div class="modal fade" id="verifyModal_@booking.BookingId" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Verify Payment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form method="post" asp-action="VerifyPayment" asp-controller="Admin">
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Booking ID</label>
+                                                                <input type="text" class="form-control" value="#BK@(booking.BookingId.ToString("D4"))" readonly />
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Guest</label>
+                                                                <input type="text" class="form-control" value="@booking.GuestName" readonly />
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Payment Method</label>
+                                                                <input type="text" class="form-control" value="@(booking.PaymentMethod ?? "Not specified")" readonly />
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Amount</label>
+                                                                <input type="text" class="form-control" value="$@booking.TotalPrice.ToString("0.00")" readonly />
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Verification Note</label>
+                                                                <textarea name="verificationNote" class="form-control" rows="3" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="submit" class="btn btn-success">Verify Payment</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">No unverified payments found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,18 +1,14 @@
 ﻿@model Hotel_Management_System.Models.Booking
 @{
-    ViewData["Title"] = "Walk In Booking";
+    ViewData["Title"] = ViewBag.BookingType == "Reservation" ? "New Reservation" : "Walk In Booking";
     Layout = "~/Views/Shared/BookingLayout.cshtml";
 }
+<link rel="stylesheet" href="~/css/booking-styles.css" />
 
 <div class="frontdesk-container">
-    <div class="section-title">
-        <h1>Walk In Booking</h1>
-        <p>Create a new walk-in booking for guests arriving without a reservation</p>
-    </div>
-
     <div class="booking-section">
         <div class="section-header">
-            <h3><i class="fas fa-user-plus"></i> New Walk-In Booking</h3>
+            <h3><i class="fas fa-@(ViewBag.BookingType == "Reservation" ? "calendar-plus" : "user-plus")"></i> @(ViewBag.BookingType == "Reservation" ? "New Reservation" : "New Walk-In Booking")</h3>
         </div>
         <div class="section-body p-4">
             @if (!ViewData.ModelState.IsValid)
@@ -29,8 +25,27 @@
                 </div>
             }
 
-            <form id="walkInForm" method="post" asp-action="ProcessWalkIn" asp-controller="FrontDesk">
+            <form id="bookingForm" method="post" asp-action="ProcessBooking" asp-controller="FrontDesk">
                 @Html.AntiForgeryToken()
+
+                <!-- Booking Type Selection -->
+                <div class="mb-4">
+                    <div class="booking-type-selector">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="BookingType" id="walkInType" value="Walk-In" @(ViewBag.BookingType != "Reservation" ? "checked" : "")>
+                            <label class="form-check-label" for="walkInType">
+                                <i class="fas fa-user-plus me-1"></i> Walk-In (Immediate Check-In)
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="BookingType" id="reservationType" value="Reservation" @(ViewBag.BookingType == "Reservation" ? "checked" : "")>
+                            <label class="form-check-label" for="reservationType">
+                                <i class="fas fa-calendar-plus me-1"></i> Reservation (Future Stay)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -65,12 +80,12 @@
                         </div>
                         <div class="mb-3">
                             <label asp-for="CheckInDate" class="form-label">Check-In Date</label>
-                            <input asp-for="CheckInDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                            <input asp-for="CheckInDate" class="form-control" type="date" value="@(ViewBag.BookingType == "Reservation" ? DateTime.Now.AddDays(1).ToString("yyyy-MM-dd") : DateTime.Now.ToString("yyyy-MM-dd"))" required>
                             <span asp-validation-for="CheckInDate" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
                             <label asp-for="CheckOutDate" class="form-label">Check-Out Date</label>
-                            <input asp-for="CheckOutDate" class="form-control" type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required>
+                            <input asp-for="CheckOutDate" class="form-control" type="date" value="@(ViewBag.BookingType == "Reservation" ? DateTime.Now.AddDays(2).ToString("yyyy-MM-dd") : DateTime.Now.AddDays(1).ToString("yyyy-MM-dd"))" required>
                             <span asp-validation-for="CheckOutDate" class="text-danger"></span>
                         </div>
                     </div>
@@ -89,20 +104,106 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="PaymentMethod" class="form-label">Payment Method</label>
-                            <select asp-for="PaymentMethod" class="form-select" required>
-                                <option value="">-- Select Payment Method --</option>
-                                <option value="Cash">Cash</option>
-                                <option value="Credit Card">Credit Card</option>
-                                <option value="Debit Card">Debit Card</option>
-                                <option value="GCash">GCash</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                            </select>
-                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label class="form-label">Payment Method</label>
+                            <div class="payment-methods-container">
+                                <div class="payment-method-options">
+                                    <div class="payment-option">
+                                        <input type="radio" name="PaymentMethod" id="payment-cash" value="Cash" class="payment-radio" required>
+                                        <label for="payment-cash" class="payment-label">
+                                            <div class="payment-icon">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </div>
+                                            <span class="payment-text">Cash</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="payment-option">
+                                        <input type="radio" name="PaymentMethod" id="payment-creditcard" value="Credit Card" class="payment-radio">
+                                        <label for="payment-creditcard" class="payment-label">
+                                            <div class="payment-icon">
+                                                <i class="fas fa-credit-card"></i>
+                                            </div>
+                                            <span class="payment-text">Credit Card</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="payment-option">
+                                        <input type="radio" name="PaymentMethod" id="payment-gcash" value="GCash" class="payment-radio">
+                                        <label for="payment-gcash" class="payment-label">
+                                            <div class="payment-icon">
+                                                <i class="fas fa-mobile-alt"></i>
+                                            </div>
+                                            <span class="payment-text">GCash</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="payment-option">
+                                        <input type="radio" name="PaymentMethod" id="payment-banktransfer" value="Bank Transfer" class="payment-radio">
+                                        <label for="payment-banktransfer" class="payment-label">
+                                            <div class="payment-icon">
+                                                <i class="fas fa-university"></i>
+                                            </div>
+                                            <span class="payment-text">Bank Transfer</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-danger payment-error"></span>
                         </div>
 
-                        <input type="hidden" asp-for="BookingType" value="Walk-In">
+                        <!-- Credit Card Payment Form (shows when Credit Card is selected) -->
+                        <div id="creditcard-form" class="payment-details-form" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Credit Card Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Card Number</label>
+                                            <input type="text" class="form-control" placeholder="•••• •••• •••• ••••">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Card Holder Name</label>
+                                            <input type="text" class="form-control" placeholder="Name on card">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Expiration Date</label>
+                                            <input type="text" class="form-control" placeholder="MM/YY">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" placeholder="•••">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GCash Payment Form (shows when GCash is selected) -->
+                        <div id="gcash-form" class="payment-details-form" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">GCash Payment</h5>
+                                    <p class="card-text">You'll be redirected to complete your GCash payment after submitting the booking.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Transfer Form (shows when Bank Transfer is selected) -->
+                        <div id="banktransfer-form" class="payment-details-form" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Bank Transfer Details</h5>
+                                    <p class="card-text">After submitting your booking, you'll receive our bank details via email for completing the transfer.</p>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Your reservation will be confirmed once payment is received.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -113,116 +214,13 @@
 
                 <div class="d-flex justify-content-end">
                     <a href="@Url.Action("Dashboard", "FrontDesk")" class="btn btn-secondary me-2"><i class="fas fa-times me-2"></i>Cancel</a>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-2"></i>Create Booking</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-2"></i>@(ViewBag.BookingType == "Reservation" ? "Create Reservation" : "Create Booking")</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<!-- Room prices script - no JSON parse needed -->
-<script type="text/javascript">
-    // Create room prices map directly in JavaScript
-    var roomPrices = {
-    @foreach (var room in ViewBag.AvailableRooms)
-    {
-        @Html.Raw($"\"{room.RoomId}\": {room.PricePerNight.ToString("0.00")}")
-        if (room != ViewBag.AvailableRooms[ViewBag.AvailableRooms.Count - 1])
-        {
-            @Html.Raw(",")
-        }
-    }
-</script>
-
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-
-    <script>
-        // Auto-update price when room selection changes
-        $(document).ready(function() {
-            // Initialize price display based on selected room
-            updatePrice();
-
-            // Update price when room selection changes
-            $("#RoomId").change(function() {
-                updatePrice();
-            });
-
-            // Update price when dates change
-            $("#CheckInDate, #CheckOutDate").change(function() {
-                updatePrice();
-            });
-
-            function updatePrice() {
-                var roomId = $("#RoomId").val();
-
-                // Debug
-                console.log("Room ID:", roomId);
-                console.log("Room Prices:", roomPrices);
-
-                var pricePerNight = roomId ? roomPrices[roomId] : 0;
-                if (!pricePerNight) pricePerNight = 0;
-
-                console.log("Price per night:", pricePerNight);
-
-                $("#PricePerNight").val("₱" + parseFloat(pricePerNight).toFixed(2));
-
-                // Calculate total price based on dates
-                var checkIn = new Date($("#CheckInDate").val());
-                var checkOut = new Date($("#CheckOutDate").val());
-
-                console.log("Check-in:", checkIn);
-                console.log("Check-out:", checkOut);
-
-                if (checkIn && checkOut && checkIn < checkOut) {
-                    var days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-                    console.log("Days:", days);
-
-                    var totalPrice = days * parseFloat(pricePerNight);
-                    console.log("Total price:", totalPrice);
-
-                    $("#TotalPrice").val(totalPrice.toFixed(2));
-                } else {
-                    $("#TotalPrice").val("0.00");
-                }
-            }
-
-            // Form validation before submit
-            $("form").on("submit", function(e) {
-                var checkIn = new Date($("#CheckInDate").val());
-                var checkOut = new Date($("#CheckOutDate").val());
-
-                if (checkIn >= checkOut) {
-                    e.preventDefault();
-                    alert("Check-out date must be after check-in date");
-                    return false;
-                }
-
-                if (!$("#RoomId").val()) {
-                    e.preventDefault();
-                    alert("Please select a room");
-                    return false;
-                }
-
-                if (!$("#PaymentMethod").val()) {
-                    e.preventDefault();
-                    alert("Please select a payment method");
-                    return false;
-                }
-
-                // Make sure we have a numeric total price
-                var totalPrice = parseFloat($("#TotalPrice").val().replace(/[^0-9.-]+/g,""));
-                if (isNaN(totalPrice) || totalPrice <= 0) {
-                    e.preventDefault();
-                    alert("Invalid total price. Please check your dates and room selection.");
-                    return false;
-                }
-
-                // Set the TotalPrice to the numeric value without currency symbol
-                $("#TotalPrice").val(totalPrice.toFixed(2));
-
-                return true;
-            });
-        });
-    </script>
+    <script src="~/js/booking.js"></script>
 }

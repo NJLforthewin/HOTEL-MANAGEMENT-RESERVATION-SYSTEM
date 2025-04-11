@@ -238,6 +238,14 @@
                             <i class="fas fa-chart-line"></i>
                             <span>View Reports</span>
                         </a>
+                        <a href="@Url.Action("PendingVerifications", "Admin")" class="quick-action-btn">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Payment Verifications</span>
+                            @if (ViewBag.UnverifiedPaymentsCount > 0)
+                            {
+                                <span class="badge bg-danger">@ViewBag.UnverifiedPaymentsCount</span>
+                            }
+                        </a>
                     </div>
                 </div>
             </div>

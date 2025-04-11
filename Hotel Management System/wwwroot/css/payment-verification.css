@@ -1,0 +1,116 @@
+﻿/* Payment and Verification Styling */
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.payment-method {
+    font-weight: 500;
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+    .payment-status.paid {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .payment-status.unpaid {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .payment-status.partial {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .payment-status.pending {
+        background-color: #6c757d;
+        color: white;
+    }
+
+.verification-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+    .verification-status.verified {
+        background-color: #198754;
+        color: white;
+    }
+
+    .verification-status.unverified {
+        background-color: #dc3545;
+        color: white;
+    }
+
+.verification-note {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #6c757d;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-action.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Tooltip for verification notes */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+    .tooltip-container .tooltip-text {
+        visibility: hidden;
+        width: 220px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -110px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+/* Admin Verification Form Styling */
+.verification-radio-group {
+    margin-bottom: 15px;
+}
+
+    .verification-radio-group .form-check {
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+
+        .verification-radio-group .form-check:hover {
+            background-color: #f8f9fa;
+        }
+
+    .verification-radio-group .form-check-input:checked + .form-check-label {
+        font-weight: 500;
+    }

@@ -1,0 +1,119 @@
+﻿@model List<Hotel_Management_System.Models.Booking>
+@{
+    ViewData["Title"] = "Pending Bookings";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/payment-verification.css" />
+
+<div class="container-fluid">
+    <div class="section-title">
+        <h1><i class="fas fa-clock me-2"></i>Pending Bookings</h1>
+        <p>View and manage all pending bookings</p>
+    </div>
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-clock"></i> Pending Bookings</h3>
+            <span class="badge">@Model.Count</span>
+        </div>
+        <div class="table-responsive">
+            <table class="frontdesk-table">
+                <thead>
+                    <tr>
+                        <th>Guest Name</th>
+                        <th>Room</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Booking Type</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count > 0)
+                    {
+                        @foreach (var booking in Model)
+                        {
+                            <tr>
+                                <td class="guest-name">@booking.GuestName</td>
+                                <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                <td class="date">@booking.CheckInDate.ToShortDateString()</td>
+                                <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
+                                <td>
+                                    <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
+                                        @(booking.BookingType ?? "Unknown")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="payment-info">
+                                        <span class="payment-method">
+                                            @(booking.PaymentMethod ?? "Not Specified")
+                                        </span>
+
+                                        <div>
+                                            <span class="payment-status @booking.PaymentStatus?.ToLower()">
+                                                @booking.PaymentStatus
+                                            </span>
+
+                                            <span class="verification-status @(booking.PaymentVerified == true ? "verified" : "unverified")">
+                                                @(booking.PaymentVerified == true ? "Verified" : "Unverified")
+                                            </span>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(booking.VerificationNote))
+                                        {
+                                            <div class="verification-note tooltip-container">
+                                                <i class="fas fa-sticky-note"></i>
+                                                <span>Admin note</span>
+                                                <span class="tooltip-text">@booking.VerificationNote</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="actions">
+                                    @if (booking.PaymentVerified == true)
+                                    {
+                                        <form asp-action="ConfirmBooking" asp-controller="FrontDesk" method="post" class="action-form">
+                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                            <button type="submit" class="btn-action confirm">
+                                                <i class="fas fa-check-circle"></i> Confirm
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn-action confirm disabled" disabled title="Payment not verified by admin">
+                                            <i class="fas fa-check-circle"></i> Confirm
+                                        </button>
+                                    }
+                                    <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
+                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                        <button type="submit" class="btn-action cancel">
+                                            <i class="fas fa-times-circle"></i> Cancel
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="empty-row">
+                            <td colspan="7">
+                                <div class="empty-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>No pending bookings found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="back-link">
+        <a href="@Url.Action("Dashboard", "FrontDesk")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>

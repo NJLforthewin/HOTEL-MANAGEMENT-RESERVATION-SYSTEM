@@ -85,6 +85,10 @@ namespace Hotel_Management_System.Controllers
                 .Take(3)
                 .ToList();
 
+            var unverifiedPaymentsCount = _context.Bookings
+                 .Count(b => b.PaymentVerified != true);
+            ViewBag.UnverifiedPaymentsCount = unverifiedPaymentsCount;
+
             // Set ViewBag properties
             ViewBag.TotalBookings = totalBookings;
             ViewBag.BookingGrowth = bookingGrowth;
@@ -185,8 +189,7 @@ namespace Hotel_Management_System.Controllers
                 {
                     // Set defaults for new booking
                     booking.CreatedAt = DateTime.Now; // Using CreatedAt instead of BookingDate
-                    booking.Status = "Confirmed";
-                    // No CreatedBy field in the model - removed that line
+                    booking.Status = "Pending"; // Changed from "Confirmed" to "Pending"
 
                     // Get room details
                     var room = await _context.Rooms.FindAsync(booking.RoomId);
@@ -203,8 +206,8 @@ namespace Hotel_Management_System.Controllers
                         booking.TotalPrice = room.PricePerNight * nights; // Use PricePerNight
                     }
 
-                    // Update room status
-                    room.Status = "Occupied";
+                    // Update room status to Reserved instead of Occupied
+                    room.Status = "Reserved";
                     _context.Rooms.Update(room);
 
                     // Add booking
@@ -1717,8 +1720,79 @@ namespace Hotel_Management_System.Controllers
                 return RedirectToAction("EditHousekeepingStaff", new { id });
             }
         }
+        public IActionResult VerifyPayment(int id)
+        {
+            var booking = _context.Bookings
+                .Include(b => b.Room)
+                .FirstOrDefault(b => b.BookingId == id);
 
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found!";
+                return RedirectToAction("PendingVerifications");
+            }
 
+            return View(booking);
+        }
+        [HttpPost]
+        public IActionResult VerifyPayment(int bookingId, string verificationNote)
+        {
+            var booking = _context.Bookings.Find(bookingId);
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found!";
+                return RedirectToAction("PendingVerifications");
+            }
+
+            // Only update payment verification - NOT booking status
+            booking.PaymentVerified = true; // This line causing the error
+            booking.VerificationNote = verificationNote;
+            booking.VerifiedBy = User.Identity?.Name ?? "Admin";
+            booking.VerificationDate = DateTime.Now;
+            booking.PaymentStatus = "Paid"; // Update payment status
+
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Payment verification completed successfully!";
+            return RedirectToAction("PendingVerifications");
+        }
+
+        public IActionResult PendingVerifications()
+        {
+            var pendingVerifications = _context.Bookings
+                .Where(b => b.PaymentVerified != true) // Fix this line - use != true instead of !b.PaymentVerified
+                .Include(b => b.Room)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToList();
+
+            return View(pendingVerifications);
+        }
+
+        [HttpGet]
+        public IActionResult TestStatusChange(int bookingId)
+        {
+            var booking = _context.Bookings.Find(bookingId);
+            if (booking == null) return Content("Booking not found");
+
+            // Log current values
+            var before = $"BEFORE: Status={booking.Status}, PaymentStatus={booking.PaymentStatus}, PaymentVerified={booking.PaymentVerified}";
+
+            // Only change PaymentVerified 
+            booking.PaymentVerified = true;
+
+            // Log after change but before save
+            var afterChange = $"AFTER CHANGE, BEFORE SAVE: Status={booking.Status}, PaymentStatus={booking.PaymentStatus}, PaymentVerified={booking.PaymentVerified}";
+
+            _context.SaveChanges();
+
+            // Refresh from database
+            _context.Entry(booking).Reload();
+
+            // Log after save
+            var afterSave = $"AFTER SAVE: Status={booking.Status}, PaymentStatus={booking.PaymentStatus}, PaymentVerified={booking.PaymentVerified}";
+
+            return Content($"{before}\n\n{afterChange}\n\n{afterSave}");
+        }
 
         private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkInDate, DateTime checkOutDate)
         {

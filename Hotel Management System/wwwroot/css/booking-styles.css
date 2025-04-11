@@ -1,0 +1,104 @@
+﻿/* Booking type selector */
+.booking-type-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+    .booking-type-selector .form-check {
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin: 0 10px;
+        transition: all 0.2s ease;
+    }
+
+    .booking-type-selector .form-check-input {
+        margin-right: 8px;
+    }
+
+        .booking-type-selector .form-check-input:checked + .form-check-label {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+    .booking-type-selector .form-check:has(.form-check-input:checked) {
+        background-color: #f5f5f5;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+/* Payment methods styling */
+.payment-methods-container {
+    margin-bottom: 20px;
+}
+
+.payment-method-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.payment-option {
+    flex: 1;
+    min-width: 120px;
+}
+
+.payment-radio {
+    display: none;
+}
+
+.payment-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.payment-radio:checked + .payment-label {
+    border-color: var(--primary-color);
+    background-color: rgba(128, 0, 32, 0.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.payment-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.payment-radio:checked + .payment-label .payment-icon {
+    color: var(--primary-color);
+}
+
+.payment-text {
+    font-weight: 500;
+}
+
+.payment-details-form {
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+/* Payment method icons specific styling */
+#payment-cash + .payment-label .payment-icon {
+    color: #28a745;
+}
+
+#payment-creditcard + .payment-label .payment-icon {
+    color: #007bff;
+}
+
+#payment-gcash + .payment-label .payment-icon {
+    color: #2196F3;
+}
+
+#payment-banktransfer + .payment-label .payment-icon {
+    color: #6c757d;
+}

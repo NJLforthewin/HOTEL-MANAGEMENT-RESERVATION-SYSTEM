@@ -916,7 +916,7 @@ namespace Hotel_Management_System.Controllers
 
             _context.SaveChanges();
             TempData["SuccessMessage"] = "Checkout successful!";
-            return RedirectToAction("Dashboard", "FrontDesk");
+            return RedirectToAction("BookedRooms", "FrontDesk");
         }
 
         [Authorize(Roles = "Admin, FrontDesk")]

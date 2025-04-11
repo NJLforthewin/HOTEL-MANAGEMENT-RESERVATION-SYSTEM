@@ -9,6 +9,11 @@
 }
 
 <div class="frontdesk-container">
+    <!-- Refresh Button and Last Updated Time -->
+    <div class="refresh-area">
+        <button id="refreshDashboard" class="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <span id="lastUpdated" class="last-updated">Last updated: @DateTime.Now.ToString("hh:mm:ss tt")</span>
+    </div>
     <!-- Dashboard Statistics -->
     <div class="frontdesk-stats">
         <div class="stat-card arrivals">
@@ -17,46 +22,46 @@
             </div>
             <div class="stat-info">
                 <h3>Today's Arrivals</h3>
-                <div class="stat-value">@ViewBag.TodayArrivals</div>
+                <div class="stat-value" id="todayArrivals">@ViewBag.TodayArrivals</div>
             </div>
         </div>
-
         <div class="stat-card departures">
             <div class="stat-icon">
                 <i class="fas fa-sign-out-alt"></i>
             </div>
             <div class="stat-info">
                 <h3>Today's Departures</h3>
-                <div class="stat-value">@ViewBag.TodayDepartures</div>
+                <div class="stat-value" id="todayDepartures">@ViewBag.TodayDepartures</div>
             </div>
         </div>
-
         <div class="stat-card occupancy">
             <div class="stat-icon">
                 <i class="fas fa-bed"></i>
             </div>
             <div class="stat-info">
                 <h3>Current Occupancy</h3>
-                <div class="stat-value">@ViewBag.Occupancy<span>%</span></div>
+                <div class="stat-value" id="occupancyRate">@ViewBag.Occupancy<span>%</span></div>
             </div>
         </div>
-
         <div class="stat-card pending">
             <div class="stat-icon">
                 <i class="fas fa-clock"></i>
             </div>
             <div class="stat-info">
                 <h3>Pending Bookings</h3>
-                <div class="stat-value">@ViewBag.PendingCount</div>
+                <div class="stat-value" id="pendingCount">@ViewBag.PendingCount</div>
             </div>
         </div>
     </div>
-
     <!-- Quick Actions -->
     <div class="frontdesk-actions">
         <a href="@Url.Action("WalkIn", "FrontDesk")" class="action-button">
             <i class="fas fa-user-plus"></i>
             <span>New Walk-In</span>
+        </a>
+        <a href="@Url.Action("NewReservation", "FrontDesk")" class="action-button">
+            <i class="fas fa-calendar-plus"></i>
+            <span>New Reservation</span>
         </a>
         <a href="@Url.Action("AvailableRooms", "FrontDesk")" class="action-button">
             <i class="fas fa-door-open"></i>
@@ -70,157 +75,31 @@
             <i class="fas fa-search"></i>
             <span>Search Guest</span>
         </a>
+        <!-- Booked and Reserved Rooms -->
+        <a href="@Url.Action("BookedRooms", "FrontDesk")" class="action-button">
+            <i class="fas fa-bed"></i>
+            <span>Booked Rooms</span>
+        </a>
+        <a href="@Url.Action("ReservedRooms", "FrontDesk")" class="action-button">
+            <i class="fas fa-calendar-check"></i>
+            <span>Reserved Rooms</span>
+        </a>
+        <a href="@Url.Action("AllRooms", "FrontDesk")" class="action-button">
+            <i class="fas fa-list"></i>
+            <span>All Rooms</span>
+        </a>
+        <!-- Confirmed and Pending Bookings -->
+        <a href="@Url.Action("ConfirmedBookings", "FrontDesk")" class="action-button">
+            <i class="fas fa-check-circle"></i>
+            <span>Confirmed Bookings</span>
+            <div class="action-badge confirmed">@ViewBag.ConfirmedBookingsCount</div>
+        </a>
+        <a href="@Url.Action("PendingBookings", "FrontDesk")" class="action-button">
+            <i class="fas fa-clock"></i>
+            <span>Pending Bookings</span>
+            <div class="action-badge pending">@ViewBag.PendingBookingsCount</div>
+        </a>
     </div>
-
-    <!-- Booking Sections -->
-    <div class="frontdesk-sections">
-        <!-- Confirmed Bookings Section -->
-        <div class="booking-section">
-            <div class="section-header">
-                <h3><i class="fas fa-calendar-check"></i> Confirmed Bookings</h3>
-                <span class="badge">@(ViewBag.ConfirmedBookings?.Count ?? 0)</span>
-            </div>
-            <div class="table-responsive">
-                <table class="frontdesk-table">
-                    <thead>
-                        <tr>
-                            <th>Guest Name</th>
-                            <th>Room</th>
-                            <th>Check-In</th>
-                            <th>Check-Out</th>
-                            <th>Booking Type</th>
-                            <th>Payment</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (ViewBag.ConfirmedBookings != null && ViewBag.ConfirmedBookings.Count > 0)
-                        {
-                            @foreach (var booking in ViewBag.ConfirmedBookings)
-                            {
-                                <tr>
-                                    <td class="guest-name">@booking.GuestName</td>
-                                    <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
-                                    <td class="date">@booking.CheckInDate.ToShortDateString()</td>
-                                    <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
-                                    <td>
-                                        <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
-                                            @(booking.BookingType ?? "Unknown")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="payment-method">
-                                            @(booking.PaymentMethod ?? "Not Specified")
-                                        </span>
-                                    </td>
-                                    <td class="actions">
-                                        <form asp-action="ConfirmCheckIn" asp-controller="FrontDesk" method="post" class="action-form">
-                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                            <button type="submit" class="btn-action checkin">
-                                                <i class="fas fa-check-circle"></i> Check-In
-                                            </button>
-                                        </form>
-
-                                        <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
-                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                            <button type="submit" class="btn-action cancel">
-                                                <i class="fas fa-times-circle"></i> Cancel
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr class="empty-row">
-                                <td colspan="7">
-                                    <div class="empty-message">
-                                        <i class="fas fa-info-circle"></i>
-                                        <p>No confirmed bookings found</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Pending Bookings Section -->
-        <div class="booking-section">
-            <div class="section-header">
-                <h3><i class="fas fa-clock"></i> Pending Bookings</h3>
-                <span class="badge">@(ViewBag.PendingBookings?.Count ?? 0)</span>
-            </div>
-            <div class="table-responsive">
-                <table class="frontdesk-table">
-                    <thead>
-                        <tr>
-                            <th>Guest Name</th>
-                            <th>Room</th>
-                            <th>Check-In</th>
-                            <th>Check-Out</th>
-                            <th>Booking Type</th>
-                            <th>Payment</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (ViewBag.PendingBookings != null && ViewBag.PendingBookings.Count > 0)
-                        {
-                            @foreach (var booking in ViewBag.PendingBookings)
-                            {
-                                <tr>
-                                    <td class="guest-name">@booking.GuestName</td>
-                                    <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
-                                    <td class="date">@booking.CheckInDate.ToShortDateString()</td>
-                                    <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
-                                    <td>
-                                        <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
-                                            @(booking.BookingType ?? "Unknown")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="payment-method">
-                                            @(booking.PaymentMethod ?? "Not Specified")
-                                        </span>
-                                    </td>
-                                    <td class="actions">
-                                        <form asp-action="Confirm" asp-controller="FrontDesk" method="post" class="action-form">
-                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                            <button type="submit" class="btn-action confirm">
-                                                <i class="fas fa-check-circle"></i> Confirm
-                                            </button>
-                                        </form>
-
-                                        <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
-                                            <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                            <button type="submit" class="btn-action cancel">
-                                                <i class="fas fa-times-circle"></i> Cancel
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr class="empty-row">
-                                <td colspan="7">
-                                    <div class="empty-message">
-                                        <i class="fas fa-info-circle"></i>
-                                        <p>No pending bookings found</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Search Guest Modal -->
 <div class="modal fade" id="searchGuestModal" tabindex="-1" aria-hidden="true">
@@ -279,43 +158,87 @@
                 $("#searchGuestModal").modal('show');
             });
 
-            // Process checkout
+            // Process checkout from modal
             $("#processCheckoutBtn").click(function () {
                 var roomNumber = $("#roomNumber").val().trim();
-                if (roomNumber) {
-                    $.ajax({
-                        url: '@Url.Action("ProcessCheckout", "FrontDesk")',
-                        type: 'POST',
-                        data: { roomNumber: roomNumber },
-                        success: function (result) {
-                            $("#checkoutModal").modal('hide');
-                            location.reload();
-                        },
-                        error: function () {
-                            alert("An error occurred during checkout. Please try again.");
-                        }
-                    });
-                } else {
-                    alert("Please enter a room number.");
+                if (!roomNumber) {
+                    alert("Please enter a room number");
+                    return;
                 }
+
+                // Send AJAX request to process checkout
+                $.ajax({
+                    url: "@Url.Action("ProcessCheckout", "FrontDesk")",
+                    type: "POST",
+                    data: { roomNumber: roomNumber },
+                    success: function (response) {
+                        // Close modal
+                        $("#checkoutModal").modal('hide');
+
+                        // Show success message and refresh dashboard
+                        alert("Checkout processed successfully!");
+                        refreshDashboardData();
+                    },
+                    error: function () {
+                        alert("Error processing checkout. Please try again.");
+                    }
+                });
             });
 
-            // Guest search
-            $("#guestSearch").on("keyup", function () {
-                var query = $(this).val().trim();
-                if (query.length > 2) {
-                    $.ajax({
-                        url: '@Url.Action("SearchGuest", "FrontDesk")',
-                        type: 'GET',
-                        data: { query: query },
-                        success: function (data) {
-                            $("#searchResults").html(data);
-                        }
-                    });
-                } else {
-                    $("#searchResults").html("");
+            // Manual refresh button
+            $("#refreshDashboard").click(function() {
+                refreshDashboardData();
+            });
+
+            // Auto refresh every 60 seconds
+            setInterval(refreshDashboardData, 60000);
+        });
+
+        // Function to refresh dashboard data
+        function refreshDashboardData() {
+            $.ajax({
+                url: '@Url.Action("GetDashboardData", "FrontDesk")',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // Update stats with animation
+                    updateWithAnimation('#todayArrivals', data.todayArrivals);
+                    updateWithAnimation('#todayDepartures', data.todayDepartures);
+                    updateWithAnimation('#occupancyRate', data.occupancy + '<span>%</span>');
+                    updateWithAnimation('#pendingCount', data.pendingCount);
+
+                    // Update last updated time
+                    var now = new Date();
+                    var timeString = now.toLocaleTimeString();
+                    $("#lastUpdated").text('Last updated: ' + timeString);
+
+                    // Flash the refresh button to show update
+                    $("#refreshDashboard").addClass('refreshed');
+                    setTimeout(function() {
+                        $("#refreshDashboard").removeClass('refreshed');
+                    }, 1000);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error refreshing dashboard: " + error);
                 }
             });
-        });
+        }
+
+        // Function to update values with animation
+        function updateWithAnimation(selector, newValue) {
+            var element = $(selector);
+            var oldValue = element.text().replace(/[^0-9]/g, '');
+
+            // Only animate if values are different
+            if (oldValue != newValue) {
+                element.addClass('updating');
+                setTimeout(function() {
+                    element.html(newValue);
+                    setTimeout(function() {
+                        element.removeClass('updating');
+                    }, 500);
+                }, 300);
+            }
+        }
     </script>
 }

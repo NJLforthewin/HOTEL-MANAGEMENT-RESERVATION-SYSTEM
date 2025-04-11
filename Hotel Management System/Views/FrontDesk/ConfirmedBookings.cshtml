@@ -1,0 +1,90 @@
+﻿@model List<Hotel_Management_System.Models.Booking>
+@{
+    ViewData["Title"] = "Confirmed Bookings";
+    Layout = "~/Views/Shared/BookingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="section-title">
+        <h1><i class="fas fa-check-circle me-2"></i>Confirmed Bookings</h1>
+        <p>View and manage all confirmed bookings</p>
+    </div>
+
+    <div class="booking-section">
+        <div class="section-header">
+            <h3><i class="fas fa-calendar-check"></i> Confirmed Bookings</h3>
+            <span class="badge">@Model.Count</span>
+        </div>
+        <div class="table-responsive">
+            <table class="frontdesk-table">
+                <thead>
+                    <tr>
+                        <th>Guest Name</th>
+                        <th>Room</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Booking Type</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count > 0)
+                    {
+                        @foreach (var booking in Model)
+                        {
+                            <tr>
+                                <td class="guest-name">@booking.GuestName</td>
+                                <td class="room-number">@(booking.Room?.RoomNumber ?? "N/A")</td>
+                                <td class="date">@booking.CheckInDate.ToShortDateString()</td>
+                                <td class="date">@booking.CheckOutDate.ToShortDateString()</td>
+                                <td>
+                                    <span class="booking-type @(booking.BookingType?.ToLower() ?? "unknown")">
+                                        @(booking.BookingType ?? "Unknown")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="payment-method">
+                                        @(booking.PaymentMethod ?? "Not Specified")
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <form asp-action="ConfirmCheckIn" asp-controller="FrontDesk" method="post" class="action-form">
+                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                        <button type="submit" class="btn-action checkin">
+                                            <i class="fas fa-check-circle"></i> Check-In
+                                        </button>
+                                    </form>
+
+                                    <form asp-action="Cancel" asp-controller="FrontDesk" method="post" class="action-form">
+                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                        <button type="submit" class="btn-action cancel">
+                                            <i class="fas fa-times-circle"></i> Cancel
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="empty-row">
+                            <td colspan="7">
+                                <div class="empty-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>No confirmed bookings found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="@Url.Action("Dashboard", "FrontDesk")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
