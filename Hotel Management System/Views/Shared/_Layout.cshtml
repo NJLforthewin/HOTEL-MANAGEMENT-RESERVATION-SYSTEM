@@ -30,7 +30,7 @@
                             <a class="nav-link text-white" href="#contact">Contact</a>
                         </li>
                     </ul>
-                    <ul class="navbar-nav">
+                <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
@@ -41,7 +41,11 @@
                         }
                         else
                         {
-                            <li class="nav-item">
+                            <li class="nav-item login-attention">
+                                <!-- Animated pointing hand -->
+                                <div class="pointer-animation"></div>
+                                <!-- Discount message bubble -->
+                                <div class="login-message">Get 10% off!</div>
                                 <a class="nav-link text-white" asp-area="" asp-controller="Access" asp-action="Login">
                                     <i class="fas fa-sign-in-alt me-1"></i> Login
                                 </a>
@@ -52,171 +56,234 @@
                                 </a>
                             </li>
                         }
-                    </ul>
-                </div>
+                </ul>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
+<div class="container">
+    <main role="main" class="pb-3">
             @RenderBody()
-        </main>
-    </div>
-    <footer class="footer text-white text-center">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 text-md-start">
-                    <h5>Nuxus Hotel</h5>
-                    <p class="mb-0">Luxury and comfort in the heart of the city</p>
-                </div>
-                <div class="col-md-4">
-                    <p class="mb-0">Copyright &copy; Nuxus Hotel @DateTime.Now.Year</p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <div class="social-icons">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
+    </main>
+</div>
+<footer class="footer text-white text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 text-md-start">
+                <h5>Nuxus Hotel</h5>
+                <p class="mb-0">Luxury and comfort in the heart of the city</p>
             </div>
-        </div>
-    </footer>
-
-    <!-- Discount Incentive Modal -->
-    <div class="modal fade" id="discountIncentiveModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Special Discount Opportunity</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-tags fa-3x text-success"></i>
-                    </div>
-                    <h4 class="mb-3">Save 10% on Your Stay!</h4>
-                    <p class="lead mb-3">If it's not in your budget, you can have a discount if you register or login to your account.</p>
-                    <div class="discount-features mb-4">
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>10% off your current booking</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>Faster checkout process</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>Access to exclusive promotions</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <a href="@Url.Action("Register", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-success">
-                        <i class="fas fa-user-plus me-2"></i>Register Now & Save
-                    </a>
-                    <a href="@Url.Action("Login", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt me-2"></i>Login
-                    </a>
-                    <button type="button" class="btn btn-outline-secondary" id="continueAsGuestBtn">
-                        Continue as Guest
-                    </button>
+            <div class="col-md-4">
+                <p class="mb-0">Copyright &copy; Nuxus Hotel @DateTime.Now.Year</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="social-icons">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
                 </div>
             </div>
         </div>
     </div>
+</footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+<!-- Discount Incentive Modal -->
+<div class="modal fade" id="discountIncentiveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Special Discount Opportunity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-tags fa-3x text-success"></i>
+                </div>
+                <h4 class="mb-3">Save 10% on Your Stay!</h4>
+                <p class="lead mb-3">If it's not in your budget, you can have a discount if you register or login to your account.</p>
+                <div class="discount-features mb-4">
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>10% off your current booking</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Faster checkout process</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Access to exclusive promotions</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="@Url.Action("Register", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i>Register Now & Save
+                </a>
+                <a href="@Url.Action("Login", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                <button type="button" class="btn btn-outline-secondary" id="continueAsGuestBtn">
+                    Continue as Guest
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script>
-        $(document).ready(function() {
-            let originalForm = null;
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    $(document).ready(function() {
+        let originalForm = null;
 
-            $('.book-now-btn, .btn-book-now').on('click', function(e) {
-                var isAuthenticated = @(User?.Identity?.IsAuthenticated == true ? "true" : "false");
+        $('.book-now-btn, .btn-book-now').on('click', function(e) {
+            var isAuthenticated = @(User?.Identity?.IsAuthenticated == true ? "true" : "false");
 
-                if (!isAuthenticated) {
-                    e.preventDefault();
+            if (!isAuthenticated) {
+                e.preventDefault();
 
-                    const $form = $(this).closest('form');
-                    if ($form.length) {
+                const $form = $(this).closest('form');
+                if ($form.length) {
+                    originalForm = {
+                        action: $form.attr('action'),
+                        data: $form.serialize()
+                    };
+                } else {
+                    // Save the href if it's a link
+                    const href = $(this).attr('href');
+                    if (href) {
                         originalForm = {
-                            action: $form.attr('action'),
-                            data: $form.serialize()
+                            href: href
                         };
-                    } else {
-                        // Save the href if it's a link
-                        const href = $(this).attr('href');
-                        if (href) {
-                            originalForm = {
-                                href: href
-                            };
-                        }
                     }
-
-                    // Show the discount incentive modal
-                    $('#discountIncentiveModal').modal('show');
                 }
-                // If authenticated, normal button behavior applies
-            });
+                // Show the discount incentive modal
+                $('#discountIncentiveModal').modal('show');
 
-            // Continue as guest button handler
-            $('#continueAsGuestBtn').on('click', function() {
-                $('#discountIncentiveModal').modal('hide');
-
-                // Submit the original form or navigate to the booking page
-                setTimeout(function() {
-                    if (originalForm) {
-                        if (originalForm.action) {
-                            // Create a temporary form and submit it
-                            const $tempForm = $('<form>', {
-                                'action': originalForm.action,
-                                'method': 'POST'
-                            });
-
-                            // Add original form data
-                            $.each(parseSerializedData(originalForm.data), function(name, value) {
-                                $tempForm.append($('<input>', {
-                                    'type': 'hidden',
-                                    'name': name,
-                                    'value': value
-                                }));
-                            });
-
-                            $('body').append($tempForm);
-                            $tempForm.submit();
-                        } else if (originalForm.href) {
-                            // Follow the saved href
-                            window.location.href = originalForm.href;
-                        }
-                    } else {
-                        // Direct to Booking/Create as the default action
-                        window.location.href = '@Url.Action("Create", "Booking")';
-                    }
-                }, 300);
-            });
-
-            // Helper function to parse serialized form data
-            function parseSerializedData(serializedStr) {
-                const result = {};
-                if (!serializedStr) return result;
-
-                const pairs = serializedStr.split('&');
-                for (let i = 0; i < pairs.length; i++) {
-                    const pair = pairs[i].split('=');
-                    const name = decodeURIComponent(pair[0]);
-                    const value = decodeURIComponent(pair[1] || '');
-                    result[name] = value;
-                }
-
-                return result;
+                // Trigger confetti when the modal opens
+                triggerDiscountCelebration();
             }
+            // If authenticated, normal button behavior applies
         });
-    </script>
+
+        // Continue as guest button handler
+        $('#continueAsGuestBtn').on('click', function() {
+            $('#discountIncentiveModal').modal('hide');
+
+            // Submit the original form or navigate to the booking page
+            setTimeout(function() {
+                if (originalForm) {
+                    if (originalForm.action) {
+                        // Create a temporary form and submit it
+                        const $tempForm = $('<form>', {
+                            'action': originalForm.action,
+                            'method': 'POST'
+                        });
+
+                        // Add original form data
+                        $.each(parseSerializedData(originalForm.data), function(name, value) {
+                            $tempForm.append($('<input>', {
+                                'type': 'hidden',
+                                'name': name,
+                                'value': value
+                            }));
+                        });
+
+                        $('body').append($tempForm);
+                        $tempForm.submit();
+                    } else if (originalForm.href) {
+                        // Follow the saved href
+                        window.location.href = originalForm.href;
+                    }
+                } else {
+                    // Direct to Booking/Create as the default action
+                    window.location.href = '@Url.Action("Create", "Booking")';
+                }
+            }, 300);
+        });
+
+        // Function to trigger the confetti celebration
+        function triggerDiscountCelebration() {
+            // Create a confetti cannon effect
+            var count = 200;
+            var defaults = {
+                origin: { y: 0.7 }
+            };
+
+            function fire(particleRatio, opts) {
+                confetti({
+                    ...defaults,
+                    ...opts,
+                    particleCount: Math.floor(count * particleRatio)
+                });
+            }
+
+            fire(0.25, {
+                spread: 26,
+                startVelocity: 55,
+            });
+            fire(0.2, {
+                spread: 60,
+            });
+            fire(0.35, {
+                spread: 100,
+                decay: 0.91,
+                scalar: 0.8
+            });
+            fire(0.1, {
+                spread: 120,
+                startVelocity: 25,
+                decay: 0.92,
+                scalar: 1.2
+            });
+            fire(0.1, {
+                spread: 120,
+                startVelocity: 45,
+            });
+        }
+
+        // Helper function to parse serialized form data
+        function parseSerializedData(serializedStr) {
+            const result = {};
+            if (!serializedStr) return result;
+
+            const pairs = serializedStr.split('&');
+            for (let i = 0; i < pairs.length; i++) {
+                const pair = pairs[i].split('=');
+                const name = decodeURIComponent(pair[0]);
+                const value = decodeURIComponent(pair[1] || '');
+                result[name] = value;
+            }
+
+            return result;
+        }
+
+        // Also trigger confetti when the login for discount button is clicked
+        $('#loginForDiscountBtn').on('click', function() {
+            triggerDiscountCelebration();
+        });
+
+        // Show/hide the login message periodically for more attention
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <text>
+                // Initially hide the login message after 5 seconds
+                setTimeout(function() {
+                    $('.login-message').fadeOut(500);
+                }, 5000);
+
+                // Show the login message every 30 seconds
+                setInterval(function() {
+                    $('.login-message').fadeIn(500).delay(3000).fadeOut(500);
+                }, 30000);
+            </text>
+        }
+    });
+</script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

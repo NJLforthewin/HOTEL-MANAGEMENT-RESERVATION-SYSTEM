@@ -1,0 +1,26 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Hotel bellhop character -->
+  <circle cx="60" cy="30" r="15" fill="#FFD700" stroke="#800020" stroke-width="1"/> <!-- Head with hotel colors -->
+  
+  <!-- Bellhop hat -->
+  <rect x="50" y="15" width="20" height="5" fill="#800020" stroke="#000" stroke-width="0.5"/>
+  <rect x="45" y="20" width="30" height="2" fill="#800020" stroke="#000" stroke-width="0.5"/>
+  
+  <!-- Body with uniform -->
+  <rect x="50" y="45" width="20" height="30" fill="#800020" stroke="#000" stroke-width="1" rx="2"/>
+  <rect x="54" y="45" width="12" height="30" fill="#FFD700" stroke="none"/> <!-- Jacket middle -->
+  
+  <!-- Arms -->
+  <line x1="50" y1="55" x2="30" y2="45" stroke="#800020" stroke-width="6" stroke-linecap="round"/>
+  <line x1="70" y1="55" x2="90" y2="40" stroke="#800020" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="90" cy="40" r="3" fill="#FFD700" stroke="#000" stroke-width="0.5"/> <!-- Pointing hand -->
+  
+  <!-- Legs -->
+  <rect x="53" y="75" width="6" height="20" fill="#000" stroke="none"/>
+  <rect x="62" y="75" width="6" height="20" fill="#000" stroke="none"/>
+  
+  <!-- Face -->
+  <circle cx="55" cy="30" r="2" fill="#000"/> <!-- Left eye -->
+  <circle cx="65" cy="30" r="2" fill="#000"/> <!-- Right eye -->
+  <path d="M55,38 Q60,42 65,38" fill="none" stroke="#000" stroke-width="1.5"/> <!-- Smile -->
+</svg>

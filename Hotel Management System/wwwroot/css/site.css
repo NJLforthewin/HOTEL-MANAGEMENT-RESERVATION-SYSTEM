@@ -1853,3 +1853,95 @@ input[type="date"] {
             margin-bottom: 8px;
         }
 }
+/* Animation for login attention */
+.login-attention {
+    position: relative;
+    display: inline-block;
+}
+
+/* Animated hand pointing to login/register */
+.pointer-animation {
+    position: absolute;
+    top: -10px;
+    right: 100%;
+    width: 40px;
+    height: 40px;
+    background-image: url('/images/pointing-hand.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: point-pulse 2s infinite;
+    transform-origin: bottom right;
+}
+
+/* Pulse and point animation */
+@keyframes point-pulse {
+    0% {
+        transform: translateX(5px) rotate(-10deg) scale(1);
+    }
+
+    50% {
+        transform: translateX(15px) rotate(5deg) scale(1.1);
+    }
+
+    100% {
+        transform: translateX(5px) rotate(-10deg) scale(1);
+    }
+}
+/* Animation for login attention */
+.login-attention {
+    position: relative;
+}
+
+/* Animated stickman pointing to login/register */
+.pointer-animation {
+    position: absolute;
+    top: 50%;
+    left: -75px; /* Position stickman further left */
+    width: 60px; /* Larger size for stickman */
+    height: 60px;
+    margin-top: -30px;
+    background-image: url('/images/stickman-pointing.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: stickman-bounce 2s infinite;
+    z-index: 100;
+}
+
+/* Bounce animation for stickman */
+@keyframes stickman-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Speech bubble for discount message */
+.login-message {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    background-color: #800020;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    z-index: 100;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+    .login-message:after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 20px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #800020;
+    }

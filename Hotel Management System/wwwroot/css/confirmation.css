@@ -1,0 +1,95 @@
+﻿
+.discount-celebration {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #800020;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+    .discount-celebration:hover {
+        transform: scale(1.02);
+    }
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(128, 0, 32, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(128, 0, 32, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(128, 0, 32, 0);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+.confirmation-card {
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+    .confirmation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+.booking-details-section {
+    margin-bottom: 1.5rem;
+}
+
+    .booking-details-section h5 {
+        color: #800020;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 0.5rem;
+    }
+
+.price-breakdown .row {
+    padding: 8px 0;
+}
+
+    .price-breakdown .row:not(:last-child) {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+.discount-amount {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+.final-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #800020;
+}
+
+.status-badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+}
+
+.return-home-btn {
+    transition: all 0.3s ease;
+    padding: 0.75rem 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .return-home-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }

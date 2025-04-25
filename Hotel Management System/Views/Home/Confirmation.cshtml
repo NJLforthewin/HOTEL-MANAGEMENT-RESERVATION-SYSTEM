@@ -3,10 +3,16 @@
     ViewData["Title"] = "Booking Confirmation";
 }
 
+<!-- Add confetti.js library -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<!-- Add reference to the separate CSS file -->
+<link rel="stylesheet" href="~/css/confirmation.css" />
+
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
+            <div class="card shadow confirmation-card">
                 <div class="card-header">
                     <h2 class="my-2">Booking Confirmation</h2>
                 </div>
@@ -16,11 +22,11 @@
                         Your booking has been successfully @(Model.Status == "Confirmed" ? "confirmed" : "received")!
                     </div>
 
-                    <div class="row mb-4">
+                    <div class="row mb-4 booking-details-section">
                         <div class="col-md-6">
                             <h5>Booking Details</h5>
                             <p><strong>Booking ID:</strong> #@Model.BookingId.ToString("D6")</p>
-                            <p><strong>Status:</strong> <span class="badge bg-@(Model.Status == "Confirmed" ? "success" : "warning")">@Model.Status</span></p>
+                            <p><strong>Status:</strong> <span class="badge bg-@(Model.Status == "Confirmed" ? "success" : "warning") status-badge">@Model.Status</span></p>
                             <p><strong>Check-in:</strong> @Model.CheckInDate.ToString("MMM dd, yyyy")</p>
                             <p><strong>Check-out:</strong> @Model.CheckOutDate.ToString("MMM dd, yyyy")</p>
                             <p><strong>Room:</strong> @(Model.Room?.RoomNumber ?? "Room information not available") (@(Model.Room?.Category ?? ""))</p>
@@ -32,33 +38,86 @@
                             <p><strong>Phone:</strong> @Model.PhoneNumber</p>
                         </div>
                     </div>
-
                     @if (Model.DiscountAmount.HasValue && Model.DiscountAmount.Value > 0 && Model.OriginalPrice.HasValue)
                     {
-                        <div class="alert alert-success mb-4">
+                        <div class="alert alert-success mb-4 discount-celebration">
                             <i class="fas fa-tags me-2"></i>
-                            <strong>Congratulations!</strong> You saved <strong>@Model.DiscountAmount.Value.ToString("C")</strong> with your member discount!
+                            <strong>🎉 Congratulations! 🎉</strong> You saved <strong>@Model.DiscountAmount.Value.ToString("C")</strong> with your member discount!
                         </div>
 
                         <div class="card mb-4">
                             <div class="card-header">
                                 <h5 class="mb-0">Pricing Details</h5>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body price-breakdown">
                                 <div class="row mb-2">
                                     <div class="col-8">Original Price:</div>
-                                    <div class="col-4 text-end"><s>@Model.OriginalPrice.Value.ToString("C")</s></div>
+                                    <div class="col-4 text-end original-price">@Model.OriginalPrice.Value.ToString("C")</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">Member Discount (10%):</div>
-                                    <div class="col-4 text-end text-success">-@Model.DiscountAmount.Value.ToString("C")</div>
+                                    <div class="col-4 text-end discount-amount">-@Model.DiscountAmount.Value.ToString("C")</div>
                                 </div>
                                 <div class="row fw-bold">
                                     <div class="col-8">Final Price:</div>
-                                    <div class="col-4 text-end">@Model.TotalPrice.ToString("C")</div>
+                                    <div class="col-4 text-end final-price">@Model.TotalPrice.ToString("C")</div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Confetti celebration script for discount -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // Trigger confetti celebration
+                                celebrateDiscount();
+
+                                // Animation for discount banner
+                                const discountBanner = document.querySelector('.discount-celebration');
+                                discountBanner.classList.add('pulse-animation');
+                                discountBanner.addEventListener('click', function() {
+                                    celebrateDiscount();
+                                });
+                            });
+
+                            function celebrateDiscount() {
+                                // Create a confetti cannon effect
+                                var count = 200;
+                                var defaults = {
+                                    origin: { y: 0.7 }
+                                };
+
+                                function fire(particleRatio, opts) {
+                                    confetti({
+                                        ...defaults,
+                                        ...opts,
+                                        particleCount: Math.floor(count * particleRatio)
+                                    });
+                                }
+
+                                fire(0.25, {
+                                    spread: 26,
+                                    startVelocity: 55,
+                                });
+                                fire(0.2, {
+                                    spread: 60,
+                                });
+                                fire(0.35, {
+                                    spread: 100,
+                                    decay: 0.91,
+                                    scalar: 0.8
+                                });
+                                fire(0.1, {
+                                    spread: 120,
+                                    startVelocity: 25,
+                                    decay: 0.92,
+                                    scalar: 1.2
+                                });
+                                fire(0.1, {
+                                    spread: 120,
+                                    startVelocity: 45,
+                                });
+                            }
+                        </script>
                     }
                     else
                     {
@@ -66,16 +125,14 @@
                             <div class="card-header">
                                 <h5 class="mb-0">Pricing</h5>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body price-breakdown">
                                 <div class="row fw-bold">
                                     <div class="col-8">Total Price:</div>
-                                    <div class="col-4 text-end">@Model.TotalPrice.ToString("C")</div>
+                                    <div class="col-4 text-end final-price">@Model.TotalPrice.ToString("C")</div>
                                 </div>
                             </div>
                         </div>
-                    }
-
-                    @if (Model.Status == "Pending")
+                    }                    @if (Model.Status == "Pending")
                     {
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
@@ -84,7 +141,7 @@
                     }
 
                     <div class="text-center mt-4">
-                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Return to Home</a>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary return-home-btn">Return to Home</a>
                     </div>
                 </div>
             </div>
