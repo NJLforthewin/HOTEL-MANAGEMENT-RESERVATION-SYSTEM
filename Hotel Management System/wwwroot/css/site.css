@@ -1806,3 +1806,50 @@ input[type="date"] {
         box-shadow: 0 6px 15px rgba(0,0,0,0.1);
         transform: translateY(-3px);
     }
+
+/* Discount Incentive Modal Styles */
+#discountIncentiveModal .modal-header {
+    background-color: #E09F3E; /* Using the accent color from your existing styles */
+    color: white;
+}
+
+#discountIncentiveModal .fas.fa-tags {
+    color: #E09F3E;
+}
+
+.discount-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+    .feature-item .fas {
+        color: #2C7A51; /* Using your success color */
+    }
+
+#discountIncentiveModal .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 576px) {
+    #discountIncentiveModal .modal-footer {
+        flex-direction: column;
+    }
+
+        #discountIncentiveModal .modal-footer .btn {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+}

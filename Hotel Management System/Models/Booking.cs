@@ -39,6 +39,15 @@ namespace Hotel_Management_System.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
 
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? OriginalPrice { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DiscountAmount { get; set; }
+
+        [StringLength(100)]
+        public string? DiscountReason { get; set; }
+
         [Required]
         public string Status { get; set; } = "Pending";
         public string BookingType { get; set; } = string.Empty;
@@ -50,8 +59,8 @@ namespace Hotel_Management_System.Models
         public User? User { get; set; }
 
         public string? PaymentMethod { get; set; }
-        public string? PaymentStatus { get; set; } = "Pending"; 
-        public string? TransactionId { get; set; } 
+        public string? PaymentStatus { get; set; } = "Pending";
+        public string? TransactionId { get; set; }
 
         public bool? PaymentVerified { get; set; } = false;
         public string? VerificationNote { get; set; }

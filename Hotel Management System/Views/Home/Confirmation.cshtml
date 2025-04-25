@@ -1,0 +1,93 @@
+﻿@model Hotel_Management_System.Models.Booking
+@{
+    ViewData["Title"] = "Booking Confirmation";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h2 class="my-2">Booking Confirmation</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Your booking has been successfully @(Model.Status == "Confirmed" ? "confirmed" : "received")!
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Booking Details</h5>
+                            <p><strong>Booking ID:</strong> #@Model.BookingId.ToString("D6")</p>
+                            <p><strong>Status:</strong> <span class="badge bg-@(Model.Status == "Confirmed" ? "success" : "warning")">@Model.Status</span></p>
+                            <p><strong>Check-in:</strong> @Model.CheckInDate.ToString("MMM dd, yyyy")</p>
+                            <p><strong>Check-out:</strong> @Model.CheckOutDate.ToString("MMM dd, yyyy")</p>
+                            <p><strong>Room:</strong> @(Model.Room?.RoomNumber ?? "Room information not available") (@(Model.Room?.Category ?? ""))</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Guest Information</h5>
+                            <p><strong>Name:</strong> @Model.GuestName</p>
+                            <p><strong>Email:</strong> @Model.Email</p>
+                            <p><strong>Phone:</strong> @Model.PhoneNumber</p>
+                        </div>
+                    </div>
+
+                    @if (Model.DiscountAmount.HasValue && Model.DiscountAmount.Value > 0 && Model.OriginalPrice.HasValue)
+                    {
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-tags me-2"></i>
+                            <strong>Congratulations!</strong> You saved <strong>@Model.DiscountAmount.Value.ToString("C")</strong> with your member discount!
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Pricing Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-8">Original Price:</div>
+                                    <div class="col-4 text-end"><s>@Model.OriginalPrice.Value.ToString("C")</s></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-8">Member Discount (10%):</div>
+                                    <div class="col-4 text-end text-success">-@Model.DiscountAmount.Value.ToString("C")</div>
+                                </div>
+                                <div class="row fw-bold">
+                                    <div class="col-8">Final Price:</div>
+                                    <div class="col-4 text-end">@Model.TotalPrice.ToString("C")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Pricing</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row fw-bold">
+                                    <div class="col-8">Total Price:</div>
+                                    <div class="col-4 text-end">@Model.TotalPrice.ToString("C")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status == "Pending")
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your booking is pending confirmation. Our staff will review and confirm your booking shortly.
+                        </div>
+                    }
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Return to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

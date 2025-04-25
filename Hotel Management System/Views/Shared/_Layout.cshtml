@@ -30,7 +30,6 @@
                             <a class="nav-link text-white" href="#contact">Contact</a>
                         </li>
                     </ul>
-
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -64,7 +63,6 @@
             @RenderBody()
         </main>
     </div>
-
     <footer class="footer text-white text-center">
         <div class="container">
             <div class="row">
@@ -86,9 +84,145 @@
         </div>
     </footer>
 
+    <!-- Discount Incentive Modal -->
+    <div class="modal fade" id="discountIncentiveModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Special Discount Opportunity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-tags fa-3x text-success"></i>
+                    </div>
+                    <h4 class="mb-3">Save 10% on Your Stay!</h4>
+                    <p class="lead mb-3">If it's not in your budget, you can have a discount if you register or login to your account.</p>
+                    <div class="discount-features mb-4">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>10% off your current booking</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>Faster checkout process</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>Access to exclusive promotions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="@Url.Action("Register", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-success">
+                        <i class="fas fa-user-plus me-2"></i>Register Now & Save
+                    </a>
+                    <a href="@Url.Action("Login", "Access", new { returnUrl = Context.Request.Path + Context.Request.QueryString })" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary" id="continueAsGuestBtn">
+                        Continue as Guest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Discount Modal Script -->
+    <script>
+        $(document).ready(function() {
+            // Store original form data and action
+            let originalForm = null;
+
+            // Override the book now button for non-authenticated users
+            $('.book-now-btn, .btn-book-now').on('click', function(e) {
+                // Check if user is authenticated
+                var isAuthenticated = @(User?.Identity?.IsAuthenticated == true ? "true" : "false");
+
+                if (!isAuthenticated) {
+                    e.preventDefault();
+
+                    // Save the form if there is one
+                    const $form = $(this).closest('form');
+                    if ($form.length) {
+                        originalForm = {
+                            action: $form.attr('action'),
+                            data: $form.serialize()
+                        };
+                    } else {
+                        // Save the href if it's a link
+                        const href = $(this).attr('href');
+                        if (href) {
+                            originalForm = {
+                                href: href
+                            };
+                        }
+                    }
+
+                    // Show the discount incentive modal
+                    $('#discountIncentiveModal').modal('show');
+                }
+                // If authenticated, normal button behavior applies
+            });
+
+            // Continue as guest button handler
+            $('#continueAsGuestBtn').on('click', function() {
+                $('#discountIncentiveModal').modal('hide');
+
+                // Submit the original form or navigate to the booking page
+                setTimeout(function() {
+                    if (originalForm) {
+                        if (originalForm.action) {
+                            // Create a temporary form and submit it
+                            const $tempForm = $('<form>', {
+                                'action': originalForm.action,
+                                'method': 'POST'
+                            });
+
+                            // Add original form data
+                            $.each(parseSerializedData(originalForm.data), function(name, value) {
+                                $tempForm.append($('<input>', {
+                                    'type': 'hidden',
+                                    'name': name,
+                                    'value': value
+                                }));
+                            });
+
+                            $('body').append($tempForm);
+                            $tempForm.submit();
+                        } else if (originalForm.href) {
+                            // Follow the saved href
+                            window.location.href = originalForm.href;
+                        }
+                    } else {
+                        // Direct to Booking/Create as the default action
+                        window.location.href = '@Url.Action("Create", "Booking")';
+                    }
+                }, 300);
+            });
+
+            // Helper function to parse serialized form data
+            function parseSerializedData(serializedStr) {
+                const result = {};
+                if (!serializedStr) return result;
+
+                const pairs = serializedStr.split('&');
+                for (let i = 0; i < pairs.length; i++) {
+                    const pair = pairs[i].split('=');
+                    const name = decodeURIComponent(pair[0]);
+                    const value = decodeURIComponent(pair[1] || '');
+                    result[name] = value;
+                }
+
+                return result;
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

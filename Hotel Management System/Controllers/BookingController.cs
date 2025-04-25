@@ -605,7 +605,6 @@ namespace Hotel_Management_System.Controllers
             return View();
         }
 
-        // POST method for Create
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -627,17 +626,20 @@ namespace Hotel_Management_System.Controllers
 
             try
             {
-                // Force UserId to null
-                booking.UserId = null;
+                // Check for authentication safely
+                bool isAuthenticated = User?.Identity?.IsAuthenticated == true;
+
+                // Only set UserId to null for anonymous users
+                // For authenticated users, let ProcessBooking handle it
+                if (!isAuthenticated)
+                {
+                    booking.UserId = null;
+                }
 
                 ProcessBooking(booking);
 
-                // Redirect based on BookingType
-                if (booking.BookingType == "Walk-In")
-                {
-                    return RedirectToAction("BookedRooms", "Room"); // Redirect for Walk-In bookings
-                }
-                return RedirectToAction("Index", "Home"); // Normal booking goes to Home
+                // Redirect to booking confirmation page instead
+                return RedirectToAction("Confirmation", new { id = booking.BookingId });
             }
             catch (Exception ex)
             {
@@ -662,14 +664,48 @@ namespace Hotel_Management_System.Controllers
                 throw new Exception("Check-out date must be after check-in date.");
             }
 
-            // IMPORTANT: Set UserId to null directly to avoid any lookup
-            booking.UserId = null;
+            // Calculate base price
+            decimal basePrice = CalculateTotalPrice(room.PricePerNight, booking.CheckInDate, booking.CheckOutDate);
+
+            // Check if user is authenticated safely
+            bool isAuthenticated = User?.Identity?.IsAuthenticated == true;
+
+            // Apply discount if user is authenticated
+            if (isAuthenticated)
+            {
+                // Try to get user ID for a logged-in user
+                if (User?.FindFirstValue(ClaimTypes.NameIdentifier) is string userIdStr &&
+                    int.TryParse(userIdStr, out int userId))
+                {
+                    booking.UserId = userId;
+                }
+
+                // Apply 10% discount
+                decimal discountAmount = basePrice * 0.10m;
+                booking.TotalPrice = basePrice - discountAmount;
+
+                // Save discount information
+                booking.OriginalPrice = basePrice;
+                booking.DiscountAmount = discountAmount;
+                booking.DiscountReason = "Member Discount";
+
+                // Set status for authenticated users
+                booking.Status = "Confirmed";
+            }
+            else
+            {
+                // IMPORTANT: Set UserId to null for anonymous users
+                booking.UserId = null;
+
+                // No discount for anonymous users
+                booking.TotalPrice = basePrice;
+                booking.Status = "Pending";
+            }
 
             // Ensure we have values for required fields
             booking.GuestName ??= "Guest";
             booking.Email ??= "No Email";
             booking.PhoneNumber ??= "No Phone";
-            booking.TotalPrice = CalculateTotalPrice(room.PricePerNight, booking.CheckInDate, booking.CheckOutDate);
             booking.PaymentStatus = "Unpaid";
             booking.PaymentMethod ??= "Not Specified";
             booking.CheckedOutAt = null;
@@ -678,18 +714,27 @@ namespace Hotel_Management_System.Controllers
             // Only handle Booking and Reservation types
             if (booking.BookingType != "Booking" && booking.BookingType != "Reservation")
             {
-                booking.BookingType = "Booking"; // Default to Booking if invalid
+                booking.BookingType = isAuthenticated ? "Member" : "Booking"; // Use Member type for authenticated users
             }
 
-            booking.Status = "Pending";
             booking.CheckedInAt = null;
 
             _context.Bookings.Add(booking);
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = booking.BookingType == "Reservation"
-                ? "Reservation submitted successfully!"
-                : "Booking submitted successfully!";
+            // Set success message based on user status and booking type
+            if (isAuthenticated)
+            {
+                TempData["SuccessMessage"] = booking.BookingType == "Reservation"
+                    ? "Reservation confirmed with 10% member discount!"
+                    : "Booking confirmed with 10% member discount!";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = booking.BookingType == "Reservation"
+                    ? "Reservation submitted successfully!"
+                    : "Booking submitted successfully!";
+            }
         }
 
         [Authorize(Roles = "Admin, FrontDesk")]
