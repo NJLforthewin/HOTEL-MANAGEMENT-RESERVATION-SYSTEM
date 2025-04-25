@@ -132,21 +132,16 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <!-- Discount Modal Script -->
     <script>
         $(document).ready(function() {
-            // Store original form data and action
             let originalForm = null;
 
-            // Override the book now button for non-authenticated users
             $('.book-now-btn, .btn-book-now').on('click', function(e) {
-                // Check if user is authenticated
                 var isAuthenticated = @(User?.Identity?.IsAuthenticated == true ? "true" : "false");
 
                 if (!isAuthenticated) {
                     e.preventDefault();
 
-                    // Save the form if there is one
                     const $form = $(this).closest('form');
                     if ($form.length) {
                         originalForm = {
