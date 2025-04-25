@@ -8,7 +8,7 @@ namespace Hotel_Management_System.Models
         public required string FirstName { get; set; }
         public required string LastName { get; set; }
         public required string Email { get; set; }
-        public required string PasswordHash { get; set; }  // ✅ Ensure this exists
+        public required string PasswordHash { get; set; }  
         public DateTime CreatedAt { get; set; }
         public required string Role { get; set; }
     }

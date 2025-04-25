@@ -53,6 +53,7 @@
             </div>
         </div>
     </div>
+
     <!-- Quick Actions -->
     <div class="frontdesk-actions">
         <a href="@Url.Action("WalkIn", "FrontDesk")" class="action-button">
@@ -66,6 +67,7 @@
         <a href="@Url.Action("AvailableRooms", "FrontDesk")" class="action-button">
             <i class="fas fa-door-open"></i>
             <span>Available Rooms</span>
+            <div class="action-badge available">@ViewBag.AvailableRoomsCount</div>
         </a>
         <a href="#" class="action-button" id="checkoutBtn">
             <i class="fas fa-sign-out-alt"></i>
@@ -79,14 +81,17 @@
         <a href="@Url.Action("BookedRooms", "FrontDesk")" class="action-button">
             <i class="fas fa-bed"></i>
             <span>Booked Rooms</span>
+            <div class="action-badge booked">@ViewBag.BookedRoomsCount</div>
         </a>
         <a href="@Url.Action("ReservedRooms", "FrontDesk")" class="action-button">
             <i class="fas fa-calendar-check"></i>
             <span>Reserved Rooms</span>
+            <div class="action-badge reserved">@ViewBag.ReservedRoomsCount</div>
         </a>
         <a href="@Url.Action("AllRooms", "FrontDesk")" class="action-button">
             <i class="fas fa-list"></i>
             <span>All Rooms</span>
+            <div class="action-badge all">@ViewBag.AllRoomsCount</div>
         </a>
         <!-- Confirmed and Pending Bookings -->
         <a href="@Url.Action("ConfirmedBookings", "FrontDesk")" class="action-button">
@@ -144,6 +149,7 @@
         </div>
     </div>
 </div>
+</div>
 
 @section Scripts {
     <script>
@@ -194,7 +200,7 @@
             setInterval(refreshDashboardData, 60000);
         });
 
-        // Function to refresh dashboard data
+                // Function to refresh dashboard data
         function refreshDashboardData() {
             $.ajax({
                 url: '@Url.Action("GetDashboardData", "FrontDesk")',
@@ -206,6 +212,14 @@
                     updateWithAnimation('#todayDepartures', data.todayDepartures);
                     updateWithAnimation('#occupancyRate', data.occupancy + '<span>%</span>');
                     updateWithAnimation('#pendingCount', data.pendingCount);
+
+                    // Update all action badges
+                    updateBadge('.action-badge.available', data.availableRoomsCount);
+                    updateBadge('.action-badge.booked', data.bookedRoomsCount);
+                    updateBadge('.action-badge.reserved', data.reservedRoomsCount);
+                    updateBadge('.action-badge.all', data.allRoomsCount);
+                    updateBadge('.action-badge.confirmed', data.confirmedBookingsCount);
+                    updateBadge('.action-badge.pending', data.pendingBookingsCount);
 
                     // Update last updated time
                     var now = new Date();
@@ -224,20 +238,22 @@
             });
         }
 
-        // Function to update values with animation
-        function updateWithAnimation(selector, newValue) {
+        // Function to update badge values
+        function updateBadge(selector, newValue) {
             var element = $(selector);
-            var oldValue = element.text().replace(/[^0-9]/g, '');
+            if (element.length) {
+                var oldValue = element.text();
 
-            // Only animate if values are different
-            if (oldValue != newValue) {
-                element.addClass('updating');
-                setTimeout(function() {
-                    element.html(newValue);
+                // Only update if values are different
+                if (oldValue != newValue) {
+                    element.addClass('updating');
                     setTimeout(function() {
-                        element.removeClass('updating');
-                    }, 500);
-                }, 300);
+                        element.text(newValue);
+                        setTimeout(function() {
+                            element.removeClass('updating');
+                        }, 500);
+                    }, 300);
+                }
             }
         }
     </script>

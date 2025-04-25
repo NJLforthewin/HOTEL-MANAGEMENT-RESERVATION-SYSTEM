@@ -19,6 +19,8 @@ using System.Globalization;
 
 namespace Hotel_Management_System.Controllers
 {
+
+
     public class BookingController : Controller
     {
         private readonly HotelManagementDbContext _context;
@@ -30,6 +32,7 @@ namespace Hotel_Management_System.Controllers
             _paymongoService = paymongoService;
             _emailService = emailService;
         }
+        [AllowAnonymous]
         public IActionResult PaymentPage(string clientSecret, decimal amount)
         {
             ViewBag.ClientSecret = clientSecret;
@@ -37,6 +40,7 @@ namespace Hotel_Management_System.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> EWalletCallback(string source_id, string id, string reference, string status)
         {
@@ -128,15 +132,7 @@ namespace Hotel_Management_System.Controllers
                         booking.PaymentStatus = "Paid";
                         booking.TransactionId = sourceId;
 
-                        // Set the status based on booking type
-                        if (booking.BookingType == "Booking")
-                        {
-                            booking.Status = "Checked-In";
-                        }
-                        else if (booking.BookingType == "Reservation")
-                        {
-                            booking.Status = "Reserved";
-                        }
+                        booking.Status = "Pending";
 
                         // Save the booking to database
                         _context.Bookings.Add(booking);
@@ -205,18 +201,22 @@ namespace Hotel_Management_System.Controllers
             }
         }
 
+        [AllowAnonymous]
         public IActionResult PaymentSuccess()
         {
             return View();
         }
 
+        [AllowAnonymous]
         public IActionResult PaymentFailed()
         {
             return View();
         }
 
 
+        [AllowAnonymous]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> InitiatePayment(Booking booking, string paymentMethod)
         {
             // Validate booking data
@@ -229,6 +229,42 @@ namespace Hotel_Management_System.Controllers
 
             try
             {
+                // Set UserId to null explicitly for anonymous users, or try to find the user ID if logged in
+                if (User.Identity == null || !User.Identity.IsAuthenticated)
+                {
+                    booking.UserId = null;
+                }
+                else
+                {
+                    // For authenticated users, try to get their ID
+                    try
+                    {
+                        var email = User.FindFirstValue(ClaimTypes.Email);
+                        if (!string.IsNullOrEmpty(email))
+                        {
+                            var currentUser = _context.Users.FirstOrDefault(u => u.Email == email);
+                            if (currentUser != null)
+                            {
+                                booking.UserId = currentUser.UserId;
+                            }
+                            else
+                            {
+                                booking.UserId = null;  // Set to null if user not found
+                            }
+                        }
+                        else
+                        {
+                            booking.UserId = null;  // Set to null if email claim not found
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Just log the exception but continue with null UserId
+                        System.Diagnostics.Debug.WriteLine($"Error finding user: {ex.Message}");
+                        booking.UserId = null;
+                    }
+                }
+
                 // Calculate room price and validate it
                 var room = _context.Rooms.FirstOrDefault(r => r.RoomId == booking.RoomId);
                 if (room == null)
@@ -287,7 +323,6 @@ namespace Hotel_Management_System.Controllers
                             TempData["SourceId"] = sourceId;
                             Console.WriteLine($"Stored source ID in TempData: {sourceId}");
                         }
-
                         Console.WriteLine($"Redirecting to checkout URL: {checkoutUrl}");
 
                         if (!string.IsNullOrEmpty(checkoutUrl))
@@ -310,15 +345,7 @@ namespace Hotel_Management_System.Controllers
                     booking.PaymentStatus = "Pending";
                     booking.TransactionId = "BT" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
-                    // Set the status based on booking type
-                    if (booking.BookingType == "Booking")
-                    {
-                        booking.Status = "Checked-In";
-                    }
-                    else if (booking.BookingType == "Reservation")
-                    {
-                        booking.Status = "Reserved";
-                    }
+                    booking.Status = "Pending";
 
                     // Save the booking to database with pending status
                     _context.Bookings.Add(booking);
@@ -334,7 +361,6 @@ namespace Hotel_Management_System.Controllers
                     TempData["BankTransferAmount"] = booking.TotalPrice.ToString(CultureInfo.InvariantCulture);
 
                     // Send email with bank transfer instructions
-                    // In EWalletCallback method, modify the email sending part:
                     if (!string.IsNullOrEmpty(booking.Email))
                     {
                         string roomNumber = room?.RoomNumber ?? "N/A";
@@ -346,7 +372,7 @@ namespace Hotel_Management_System.Controllers
                             booking.CheckOutDate,
                             roomNumber,
                             booking.TotalPrice,
-                            "Credit Card" // Specify GCash as the payment method
+                            "Bank Transfer"  // Changed from "Credit Card" to correct payment method
                         );
 
                         if (emailSent)
@@ -374,7 +400,6 @@ namespace Hotel_Management_System.Controllers
                         ViewBag.RoomPrices = _context.Rooms.ToDictionary(r => r.RoomId.ToString(), r => r.PricePerNight);
                         return View("Create", booking);
                     }
-
                     try
                     {
                         // Access payment intent data using JObject syntax
@@ -415,6 +440,7 @@ namespace Hotel_Management_System.Controllers
             }
         }
 
+        [AllowAnonymous]
         public IActionResult BankTransferInstructions()
         {
             // Get booking reference from TempData
@@ -440,6 +466,7 @@ namespace Hotel_Management_System.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> PaymentCallback(string status, string paymentIntentId)
         {

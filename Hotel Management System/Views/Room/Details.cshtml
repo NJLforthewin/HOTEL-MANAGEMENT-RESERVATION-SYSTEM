@@ -190,14 +190,7 @@
                         <div class="booking-options">
                             @if (Model.Status == "Available")
                             {
-                                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                                {
-                                    <a href="@Url.Action("Create", "Booking", new { roomId = Model.RoomId })" class="btn btn-book-now w-100 mb-3">Book Now</a>
-                                }
-                                else
-                                {
-                                    <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Create", "Booking", new { roomId = Model.RoomId }) })" class="btn btn-book-now w-100 mb-3">Login to Book</a>
-                                }
+                                <a href="@Url.Action("Create", "Booking", new { roomId = Model.RoomId })" class="btn btn-book-now w-100 mb-3">Book Now</a>
                             }
                             else
                             {

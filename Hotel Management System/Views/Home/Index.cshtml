@@ -58,14 +58,7 @@
                         </div>
 
                         <div class="text-center">
-                            @if (User.Identity?.IsAuthenticated == true)
-                            {
-                                <button type="submit" class="btn btn-reserve">Check Availability</button>
-                            }
-                            else
-                            {
-                                <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Index", "Home", new { scrollTo = "reservation" }) })" class="btn btn-reserve">Login to Reserve</a>
-                            }
+                            <button type="submit" class="btn btn-reserve">Check Availability</button>
                         </div>
                     </form>
                 </div>
@@ -157,17 +150,9 @@
 
                                 <div class="d-flex justify-content-between">
                                     <a href="@Url.Action("Details", "Room", new { id = room.RoomId })" class="btn btn-view-details">View Details</a>
-
                                     @if (room.Status == "Available")
                                     {
-                                        @if (User.Identity?.IsAuthenticated == true)
-                                        {
-                                            <a href="@Url.Action("Create", "Booking", new { roomId = room.RoomId })" class="btn btn-book-now">Book Now</a>
-                                        }
-                                        else
-                                        {
-                                            <a href="@Url.Action("Login", "Access", new { ReturnUrl = Url.Action("Create", "Booking", new { roomId = room.RoomId }) })" class="btn btn-book-now">Login to Book</a>
-                                        }
+                                        <a href="@Url.Action("Create", "Booking", new { roomId = room.RoomId })" class="btn btn-book-now">Book Now</a>
                                     }
                                     else
                                     {

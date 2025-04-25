@@ -55,20 +55,28 @@ namespace Hotel_Management_System.Controllers
                 // Today's arrivals
                 var todayArrivals = _context.Bookings
                     .Count(b => b.CheckInDate.Date == today &&
-                               (b.Status == "Confirmed" || b.Status == "Pending"));
+                              (b.Status == "Confirmed" || b.Status == "Pending"));
 
                 // Today's departures
                 var todayDepartures = _context.Bookings
                     .Count(b => b.CheckOutDate.Date == today &&
-                               b.CheckedInAt != null && b.CheckedOutAt == null);
+                              b.CheckedInAt != null && b.CheckedOutAt == null);
 
                 // Current occupancy
                 var totalRooms = _context.Rooms.Count();
                 var occupiedRooms = _context.Bookings
                     .Count(b => b.CheckedInAt != null && b.CheckedOutAt == null &&
-                               b.CheckOutDate.Date > today);
+                              b.CheckOutDate.Date > today);
 
                 int occupancyRate = totalRooms > 0 ? (occupiedRooms * 100) / totalRooms : 0;
+
+                // Count for each category
+                var availableRoomsCount = _context.Rooms.Count(r => r.Status == "Available");
+                var bookedRoomsCount = _context.Rooms.Count(r => r.Status == "Occupied");
+                var reservedRoomsCount = _context.Bookings.Count(b => b.Status == "Reserved");
+                var allRoomsCount = totalRooms;
+                var pendingBookingsCount = pendingBookings.Count;
+                var confirmedBookingsCount = confirmedBookings.Count;
 
                 // Set ViewBag data
                 ViewBag.PendingBookings = pendingBookings;
@@ -76,7 +84,15 @@ namespace Hotel_Management_System.Controllers
                 ViewBag.TodayArrivals = todayArrivals;
                 ViewBag.TodayDepartures = todayDepartures;
                 ViewBag.Occupancy = occupancyRate;
-                ViewBag.PendingCount = pendingBookings.Count;
+                ViewBag.PendingCount = pendingBookingsCount;
+
+                // New count values
+                ViewBag.AvailableRoomsCount = availableRoomsCount;
+                ViewBag.BookedRoomsCount = bookedRoomsCount;
+                ViewBag.ReservedRoomsCount = reservedRoomsCount;
+                ViewBag.AllRoomsCount = allRoomsCount;
+                ViewBag.PendingBookingsCount = pendingBookingsCount;
+                ViewBag.ConfirmedBookingsCount = confirmedBookingsCount;
 
                 Debug.WriteLine("[INFO] Dashboard data loaded successfully");
                 return View("Dashboard");
@@ -111,44 +127,57 @@ namespace Hotel_Management_System.Controllers
             return View(pendingBookings);
         }
 
-
-        [HttpGet]
-        public IActionResult GetDashboardData()
+        public JsonResult GetDashboardData()
         {
             try
             {
                 var today = DateTime.Today;
 
-                // Calculate the same statistics as in the Dashboard action
-                var todayArrivalsCount = _context.Bookings
+                // Get all the counts for the dashboard
+                var todayArrivals = _context.Bookings
                     .Count(b => b.CheckInDate.Date == today &&
-                            (b.Status == "Confirmed" || b.Status == "Pending" || b.Status == "Reserved") &&
-                            b.CheckedInAt == null);
+                              (b.Status == "Confirmed" || b.Status == "Pending"));
 
-                var todayDeparturesCount = _context.Bookings
+                var todayDepartures = _context.Bookings
                     .Count(b => b.CheckOutDate.Date == today &&
-                            b.Status == "Checked-In" &&
-                            b.CheckedInAt != null &&
-                            b.CheckedOutAt == null);
-
-                var pendingCount = _context.Bookings
-                    .Count(b => b.Status != null && b.Status.Trim() == "Pending");
+                              b.CheckedInAt != null && b.CheckedOutAt == null);
 
                 var totalRooms = _context.Rooms.Count();
-                var occupiedRooms = _context.Rooms.Count(r => r.Status == "Occupied");
+                var occupiedRooms = _context.Bookings
+                    .Count(b => b.CheckedInAt != null && b.CheckedOutAt == null &&
+                              b.CheckOutDate.Date > today);
+
                 int occupancyRate = totalRooms > 0 ? (occupiedRooms * 100) / totalRooms : 0;
+
+                var pendingBookingsCount = _context.Bookings
+                    .Count(b => b.Status != null && b.Status.Trim() == "Pending");
+
+                var confirmedBookingsCount = _context.Bookings
+                    .Count(b => b.Status != null && b.Status.Trim() == "Confirmed" && b.CheckedInAt == null);
+
+                var availableRoomsCount = _context.Rooms.Count(r => r.Status == "Available");
+                var bookedRoomsCount = _context.Rooms.Count(r => r.Status == "Occupied");
+                var reservedRoomsCount = _context.Bookings.Count(b => b.Status == "Reserved");
+                var allRoomsCount = totalRooms;
 
                 return Json(new
                 {
-                    todayArrivals = todayArrivalsCount,
-                    todayDepartures = todayDeparturesCount,
-                    pendingBookings = pendingCount,
-                    occupancyRate = occupancyRate
+                    todayArrivals,
+                    todayDepartures,
+                    occupancy = occupancyRate,
+                    pendingCount = pendingBookingsCount,
+                    pendingBookingsCount,
+                    confirmedBookingsCount,
+                    availableRoomsCount,
+                    bookedRoomsCount,
+                    reservedRoomsCount,
+                    allRoomsCount
                 });
             }
             catch (Exception ex)
             {
-                return Json(new { error = ex.Message });
+                Debug.WriteLine($"[ERROR] Error getting dashboard data: {ex.Message}");
+                return Json(new { error = "Failed to load dashboard data" });
             }
         }
 
@@ -346,6 +375,27 @@ namespace Hotel_Management_System.Controllers
             }
 
             return View(booking);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,FrontDesk")]
+        public async Task<IActionResult> ConfirmBooking(int bookingId)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found.";
+                return RedirectToAction("PendingBookings");
+            }
+
+            // Always set to "Confirmed" first, regardless of booking type
+            booking.Status = "Confirmed";
+
+            _context.Update(booking);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Booking confirmed successfully.";
+            return RedirectToAction("ConfirmedBookings");  
         }
 
         [HttpPost]
